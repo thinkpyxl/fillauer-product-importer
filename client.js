@@ -4,7 +4,7 @@ function range2array(start, end) {
     return [start, ...range2array(start + 1, end)];
 }
 
-function removeAttrSuspect(arr, toRemove){
+function removeVal(arr, toRemove){
     for(let i = 0; i < arr.length; i++){
         if(arr[i] === toRemove){
             arr.splice(i,1)
@@ -12,6 +12,7 @@ function removeAttrSuspect(arr, toRemove){
         }
     }
 }
+//* ////////////////////////////////////////////////////
 
 
 const shorthandsJSON = document.getElementById('shorthand-data').textContent
@@ -19,26 +20,26 @@ const productsJSON = document.getElementById('product-data').textContent
 
 let shorthands = JSON.parse(shorthandsJSON)
 let products = JSON.parse(productsJSON)
+const productValues = Object.values(products)
 
-// If this operation is done more than 3 times, consider making new object keyed
-function findAttrColPos(haystack, needle){
-    haystack = Object.values(haystack[0])
-    console.log(haystack)
-    for(let i = 0; i < haystack.length; i++){
-        if(haystack[i] === needle)
-            return i
-    }
-    return -1
+// Create attribute to index lookup object
+let attributes = {}
+let attributeValues = Object.values(products[0])
+for(let i = 0; i < attributeValues.length; i++){
+    attributes[products[0][i]] = i
 }
+console.log(attributes)
 
-let parentIdPos = findAttrColPos(products, "Parent ID")
+
 
 // Keyed on parent id
 let productSeries = {}
+let parentIdPos = attributes["Parent ID"]
 
 // Prod will be a single product's row
 function attachAttributes(attrRow, prod){
-    let productObj = {}
+    let prodObj = {}
+    prod = Object.values(prod)
     for(let i = 0; i < prod.length; i++){
         // Specified cells only
         if(prod[i] !== ""){
@@ -50,28 +51,31 @@ function attachAttributes(attrRow, prod){
 
 
 // Traverse through products and build product series object
-for(let i = 1; i < products.length; i++){
+for(let i = 1; i < productValues.length; i++){
     let crntRow = products[i]
-    let prod = attachAttributes(products[0], crntRow)
+    let prod = attachAttributes(attributeValues, products[i])
 
     // New product series
-    if(productSeries[prod['Parent ID']] == undefined){
+    if(productSeries[prod['Parent ID']] === undefined){
         productSeries[prod['Parent ID']] = []
     }
 
-    productSeries[prod['Parent ID']].append(prod)
+    productSeries[prod['Parent ID']].push(prod)
 }
+
+console.log(productSeries)
 
 // 
 //    Product Number Generation
 //
 // With seperated product series and complete product objects, 
 //     go by a specific series and find varying attributes.
+
 let seriesArray = Object.keys(productSeries)
 for(let i = 0; i < seriesArray.length; i++){
     let series = productSeries[seriesArray[i]]
     let variationAttrs = []
-    let suspectAttr = range2array(0, products[0].length)
+    let suspectAttr = range2array(0, attributeValues.length)
 
     let prevElem = series[0]
     // Traverse products within a series
@@ -81,14 +85,10 @@ for(let i = 0; i < seriesArray.length; i++){
             // if()
             if(series[j][a] !== prevElem[a]){
                 confirmedVariationsIndices.append(a)
-                suspectAttr = removeAttrSuspect(suspectAttr, a)
+                suspectAttr = removeVal(suspectAttr, a)
             }
        }
        prevElem = series[j]
 
     }
 }
-
-console.log(range2array(1,4))
-
-console.log(Object.values(products))
