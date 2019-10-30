@@ -1,7 +1,7 @@
 <?php
-$csv_shorthand = array_map('str_getcsv', file('shorthand.csv'));
+$csv_shorthand = array_map('str_getcsv', file('sample/shorthand.csv'));
 
-$csv_product = array_map('str_getcsv', file('lower-extreme-variations.csv'));
+$csv_product = array_map('str_getcsv', file('sample/lower-extreme-variations.csv'));
 ?>
 <body style='background-color: #13ce66;'>
 <main style='opacity: 0;'>
@@ -13,7 +13,7 @@ $csv_product = array_map('str_getcsv', file('lower-extreme-variations.csv'));
 <p id='product-data'>
     <?php echo json_encode($csv_product, JSON_FORCE_OBJECT); ?>
 </p>
-<script src='client.js'></script>
+<script src='assets/client.js'></script>
 </main>
 </body>
 <?php
