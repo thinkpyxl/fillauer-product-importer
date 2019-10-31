@@ -1,25 +1,3 @@
-<?php
-
-// Upload file
-if(isset($_POST['import_button'])){
-
-  if($_FILES['file']['name'] != ''){
-    $uploadedfile = $_FILES['file'];
-    $upload_overrides = array( 'test_form' => false );
-
-    $movefile = wp_handle_upload( $uploadedfile, $upload_overrides );
-    $imageurl = "";
-    if ( $movefile && ! isset( $movefile['error'] ) ) {
-       $imageurl = $movefile['url'];
-       echo "url : ".$imageurl;
-    } else {
-       echo $movefile['error'];
-    }
-  }
- 
-}
-
-?>
 <h1>Upload File</h1>
 
 <!-- Form -->
@@ -35,3 +13,19 @@ if(isset($_POST['import_button'])){
     </tr>
   </table>
 </form>
+
+
+<?php
+
+// File reciever
+if(isset($_POST['import_button'])){
+
+  if($_FILES['file']['name'] != ''){
+    $uploadedfile = $_FILES['file'];
+    echo "<p>File Received: ".$uploadedfile['name']."</p>";
+    echo "<p class='dot-loading'>Processing...</p>";
+  }
+ 
+}
+
+?>
