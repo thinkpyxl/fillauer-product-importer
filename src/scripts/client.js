@@ -1,47 +1,41 @@
-console.log('client-side script executed')
-// Utitlity Functions
-function range2array(start, end) {
-    if(start === end) return [start];
-    return [start, ...range2array(start + 1, end)];
-}
-
-function removeVal(arr, toRemove){
-    for(let i = 0; i < arr.length; i++){
-        if(arr[i] === toRemove){
-            arr.splice(i,1)
-            return arr
-        }
-    }
-}
+import csv from 'csv-parse'
+console.log('client-side script executed', csv)
 //* ////////////////////////////////////////////////////
 
 function run(){
     const statusElm = document.querySelector('.import_status');
-    try{
-        const products = JSON.parse(php_product_data.product_data)
-    }
-    catch{
-        return false;
-    }
-    const productValues = Object.values(products)
-    
-    // Create attribute to index lookup object
-    let attributes = {}
-    let attributeValues = Object.values(products[0])
-    for(let i = 0; i < attributeValues.length; i++){
-        attributes[products[0][i]] = i
-    }
+    const importBtn = document.querySelector('#import_button');
+    const fileInput = document.querySelector('#file_input');
+    console.log(fileInput)
+
+    importBtn.addEventListener('mouseup', ev => {
+        ev.preventDefault();
+        // props to https://javascript.info/file#filereader
+        let fileHandler = fileInput.files[0];
+        let reader = new FileReader();
+      
+        reader.readAsText(fileHandler);
+        reader.onload = function() {
+            csv(reader.result, {}, function(err, output){
+                if(err) console.err("CSV parser failed: ",err)
+                else processCSV(output)
+            })
+        };
+
+    })
+}
+function processCSV(csv){
+
+    let attributes = csv[0]
+
     console.log(attributes)
-    
-    
     
     // Keyed on parent id
     let productSeries = {}
     
     // Prod will be a single product's row
-    function attachAttributes(attrRow, prod){
+    function keyByAttributes(attrRow, prod){
         let prodObj = {}
-        prod = Object.values(prod)
         for(let i = 0; i < prod.length; i++){
             // Specified cells only
             if(prod[i] !== ""){
@@ -53,9 +47,9 @@ function run(){
     
     
     // Traverse through products and build product series object
-    for(let i = 1; i < productValues.length; i++){
-        let crntRow = products[i]
-        let prod = attachAttributes(attributeValues, products[i])
+    for(let i = 1; i < csv.length; i++){
+        let crntRow = csv[i]
+        let prod = keyByAttributes(attributes, crntRow)
     
         // New product series
         if(productSeries[prod['Parent ID']] === undefined){
@@ -73,11 +67,11 @@ function run(){
     // With seperated product series and complete product objects, 
     //     go by a specific series and find varying attributes.
     
+    return true;
     let seriesArray = Object.keys(productSeries)
     for(let i = 0; i < seriesArray.length; i++){
         let series = productSeries[seriesArray[i]]
         let variationAttrs = []
-        let suspectAttr = range2array(0, attributeValues.length)
     
         let prevElem = series[0]
         // Traverse products within a series
@@ -87,7 +81,6 @@ function run(){
                 // if()
                 if(series[j][a] !== prevElem[a]){
                     confirmedVariationsIndices.append(a)
-                    suspectAttr = removeVal(suspectAttr, a)
                 }
            }
            prevElem = series[j]
@@ -96,61 +89,6 @@ function run(){
     }
 }
 
-// run()
-function parsecsv(RAW){
-    // Analyze first row
-    console.log(RAW)
-    let c = ''
-    let value = ''
-    let valueN = 0
-    let rowsN = 0
-    let prod = {}
-    let rows = {}
-    let ignoreComma = false
-    // cols
-    for(let i = 0; i < RAW.length; i++){
-        try {
-            c = RAW[i]
-        } catch { return rows }
-
-        if(c === '"'){
-            ignoreComma = !ignoreComma
-        }
-        else if(!ignoreComma & c === ','){
-            prod[valueN++] = value
-            value = ''
-        }
-        else if(c === '\n'){
-            prod[valueN++] = value
-            value = ''
-            rows[rowsN++] = prod
-            prod = {}
-        }
-        // Building onto the same value
-        else{
-            value += c
-        }
-    }
-    return rows
-}
 document.addEventListener('DOMContentLoaded', ()=>{
-    const importBtn = document.querySelector('#import_button');
-    const fileInput = document.querySelector('#file_input');
-    console.log(fileInput)
-
-    importBtn.addEventListener('mouseup', ev => {
-        ev.preventDefault();
-        // props to https://javascript.info/file#filereader
-        let fileHandler = fileInput.files[0];
-        let reader = new FileReader();
-      
-        reader.readAsText(fileHandler);
-        reader.onload = function() {
-            console.log(reader.result);
-            const products = parsecsv(reader.result)
-            console.log(products)
-        };
-
-    })
-
+    run()
 })
