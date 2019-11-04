@@ -1,6 +1,6 @@
 <?php 
 /**
- * Plugin Name: Product Importer
+ * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
  */
 
