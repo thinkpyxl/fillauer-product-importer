@@ -1,5 +1,5 @@
 import csv from 'csv-parse'
-console.log('client-side script executed', csv)
+console.log('client-side script executed')
 //* ////////////////////////////////////////////////////
 
 function run(){
@@ -15,6 +15,7 @@ function run(){
         let reader = new FileReader();
       
         reader.readAsText(fileHandler);
+        
         reader.onload = function() {
             csv(reader.result, {}, function(err, output){
                 if(err) console.err("CSV parser failed: ",err)
@@ -67,25 +68,29 @@ function processCSV(csv){
     // With seperated product series and complete product objects, 
     //     go by a specific series and find varying attributes.
     
-    return true;
     let seriesArray = Object.keys(productSeries)
     for(let i = 0; i < seriesArray.length; i++){
-        let series = productSeries[seriesArray[i]]
-        let variationAttrs = []
-    
-        let prevElem = series[0]
+        let series = Object.values(productSeries[seriesArray[i]])
+        console.log(series)
+        let seriesVariations = []
+        let prevElem = Object.values(series[0])
+
         // Traverse products within a series
         for(let j = 1; j < series.length; j++){
+            let prod = Object.values(series[j])
             // Traverse attributes
-            for(let a = 0; a < series[j].length; a++){
-                // if()
-                if(series[j][a] !== prevElem[a]){
-                    confirmedVariationsIndices.append(a)
+            for(let a = 0; a < prod.length; a++){
+                if(a === 0){
+                    console.log(`comparing ${prod[a]} and ${prevElem[a]}`)
+                }
+                if(prod[a] !== prevElem[a]){
+                    // confirmedVariationsIndices.push(a)
+                    seriesVariations.push(attributes[a])
                 }
            }
-           prevElem = series[j]
-    
+           prevElem = prod
         }
+        console.log(seriesArray[i], seriesVariations)
     }
 }
 
