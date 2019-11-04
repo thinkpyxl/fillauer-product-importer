@@ -16,17 +16,13 @@ function removeVal(arr, toRemove){
 //* ////////////////////////////////////////////////////
 
 function run(){
-    const shorthandsElm = document.getElementById('shorthand-data')
-    const productsElm = document.getElementById('product-data')
-    
-    if(productsElm === null){
-        return false
+    const statusElm = document.querySelector('.import_status');
+    try{
+        const products = JSON.parse(php_product_data.product_data)
     }
-    const shorthandsJSON = shorthandsElm.textContent
-    const productsJSON = productsElm.textContent
-    
-    let shorthands = JSON.parse(shorthandsJSON)
-    let products = JSON.parse(productsJSON)
+    catch{
+        return false;
+    }
     const productValues = Object.values(products)
     
     // Create attribute to index lookup object
@@ -41,7 +37,6 @@ function run(){
     
     // Keyed on parent id
     let productSeries = {}
-    let parentIdPos = attributes["Parent ID"]
     
     // Prod will be a single product's row
     function attachAttributes(attrRow, prod){
@@ -101,4 +96,63 @@ function run(){
     }
 }
 
-run()
+// run()
+function parsecsv(RAW){
+    // Analyze first row
+    console.log(RAW)
+    let c = ''
+    let value = ''
+    let prod = []
+    let rows = []
+    let ignoreComma = false
+    // cols
+    for(let i = 0; i < RAW.length; i++){
+        try {
+            c = RAW[i]
+        } catch { return rows }
+
+        if(c === '"'){
+            ignoreComma = !ignoreComma
+        }
+        else if(!ignoreComma & c === ','){
+            prod.push(value)
+            value = ''
+        }
+        else if(c === '\n'){
+            prod.push(value)
+            value = ''
+            rows.push(prod)
+            prod = []
+        }
+        // Building onto the same value
+        else{
+            value += c
+        }
+    }
+    // Save the last product
+    if(prod.length > 0){
+        rows.push(prod)
+    }
+    return rows
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+    const importBtn = document.querySelector('#import_button');
+    const fileInput = document.querySelector('#file_input');
+    console.log(fileInput)
+
+    importBtn.addEventListener('mouseup', ev => {
+        ev.preventDefault();
+        // props to https://javascript.info/file#filereader
+        let fileHandler = fileInput.files[0];
+        let reader = new FileReader();
+      
+        reader.readAsText(fileHandler);
+        reader.onload = function() {
+            console.log(reader.result);
+            const products = parsecsv(reader.result)
+            console.log(products)
+        };
+
+    })
+
+})
