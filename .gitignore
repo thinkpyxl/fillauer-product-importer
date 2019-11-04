@@ -1,3 +1,5 @@
+## Plug-in ignores
+dist
 ## Globally Ignored
 .DS_Store
 node_modules
