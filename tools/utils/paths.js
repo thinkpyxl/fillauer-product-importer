@@ -1,9 +1,12 @@
 import path from 'path';
 
 const { resolve } = path;
-const root = resolve(process.env.PWD);
-const theme = `${root}/wp-content/themes/_view`;
-const plugin = `${root}/wp-content/plugins/_core`;
+// const root = resolve(process.env.PWD);
+// const theme = `${root}/wp-content/themes/_view`;
+// const plugin = `${root}/wp-content/plugins/_core`;
+const root = '.';
+const theme = '.';
+const plugin = '.';
 
 const paths = {
   src: {
