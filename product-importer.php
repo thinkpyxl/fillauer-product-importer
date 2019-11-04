@@ -13,7 +13,7 @@ function importer_menu(){
 
 add_action('admin_menu', 'importer_menu');
 function register_processor(){
-    wp_register_script('product-import-processor', plugins_url('assets/client.js',__FILE__), '1.0.0', true);
+    wp_register_script('product-import-processor', plugins_url('dist/scripts/client.js',__FILE__), '1.0.0', true);
     // wp_localize_script('product-import-processor', 'php_vars', array(
     //     'test' => 'yay',
     // ));

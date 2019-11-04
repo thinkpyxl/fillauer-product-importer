@@ -1,0 +1,6 @@
+{
+    "name": "pyxl/fillauer-product-importer",
+    "description": "WordPress plugin not for creating popups",
+    "type": "wordpress-plugin",
+    "version": "1.0.0"
+}

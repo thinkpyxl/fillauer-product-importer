@@ -102,8 +102,10 @@ function parsecsv(RAW){
     console.log(RAW)
     let c = ''
     let value = ''
-    let prod = []
-    let rows = []
+    let valueN = 0
+    let rowsN = 0
+    let prod = {}
+    let rows = {}
     let ignoreComma = false
     // cols
     for(let i = 0; i < RAW.length; i++){
@@ -115,23 +117,19 @@ function parsecsv(RAW){
             ignoreComma = !ignoreComma
         }
         else if(!ignoreComma & c === ','){
-            prod.push(value)
+            prod[valueN++] = value
             value = ''
         }
         else if(c === '\n'){
-            prod.push(value)
+            prod[valueN++] = value
             value = ''
-            rows.push(prod)
-            prod = []
+            rows[rowsN++] = prod
+            prod = {}
         }
         // Building onto the same value
         else{
             value += c
         }
-    }
-    // Save the last product
-    if(prod.length > 0){
-        rows.push(prod)
     }
     return rows
 }
