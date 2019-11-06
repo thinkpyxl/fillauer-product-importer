@@ -25,43 +25,85 @@ function run(){
 
     })
 }
+//   Mizner notes
+//                  https://wordpress.org/plugins/acf-to-rest-api/
+        // Testing:
+        // 1. Define static object with anticipated schema
+        // 2. Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API 
+        // 3. Handle errors
+
+        // Ultimately:
+        // 1. Get all data to iterate through
+        // 2. Iterate
+        // 2.1 Format data in current iteration
+        // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
+        // 2.2 Handle errors.
+
+
+function buildProductObj(attrRow, productRow){
+    const productObj = {}    
+
+    // no returns for map since I'm building a new object
+    productRow.map((val, ind) => {
+        if(val !== '')
+            productObj[attrRow[ind]] = val
+    })
+    return productObj
+}
+
+const PICname = "Parent ID"
+
+function buildProductSeries(attrRow, inputCSV){
+    const productSeries = {}
+
+    inputCSV.splice(1).map((val) => {
+        const prod = buildProductObj(attrRow, val)
+        if(!prod){
+            console.log(val)
+        }
+
+        // Ignore blank rows or fake products
+        if(prod === {} || prod[PICname] == undefined ) return false
+        
+        
+        // New keys for new series introduced
+        if(!productSeries[prod[PICname]]){
+            productSeries[prod[PICname]] = []
+            productSeries[prod[PICname]].push(prod)
+        } 
+        else{
+            productSeries[prod[PICname]].push(prod)
+        }
+    })
+
+    if(Object.values(productSeries).length < 1){
+        console.error("No products series were created :(")
+    }
+    return productSeries
+}
+
 function processCSV(csv){
 
-    let attributes = csv[0]
+    const attributes = csv[0]
 
+    if(!attributes.includes(PICname)){
+        window.alert(`Make sure your spreadsheet Parent ID ie PIC attribute is using the name "${PICname}" VERBATIM`)
+        return false
+    }
+    
     console.log(attributes)
     
     // Keyed on parent id
-    let productSeries = {}
     
-    // Prod will be a single product's row
-    function keyByAttributes(attrRow, prod){
-        let prodObj = {}
-        for(let i = 0; i < prod.length; i++){
-            // Specified cells only
-            if(prod[i] !== ""){
-                prodObj[attrRow[i]] = prod[i]
-            }
-        }
-        return prodObj
-    }
-    
+
     
     // Traverse through products and build product series object
-    for(let i = 1; i < csv.length; i++){
-        let crntRow = csv[i]
-        let prod = keyByAttributes(attributes, crntRow)
-    
-        // New product series
-        if(productSeries[prod['Parent ID']] === undefined){
-            productSeries[prod['Parent ID']] = []
-        }
-    
-        productSeries[prod['Parent ID']].push(prod)
-    }
-    
+
+    // const productObjs
+    const productSeries = buildProductSeries(attributes, csv)
     console.log(productSeries)
-    
+    return false
+
     // 
     //    Product Number Generation
     //
