@@ -2,11 +2,15 @@ import csv from 'csv-parse'
 console.log('client-side script executed')
 //* ////////////////////////////////////////////////////
 
-function run(){
+
+function run(existingProducts){
     const statusElm = document.querySelector('.import_status');
     const importBtn = document.querySelector('#import_button');
     const fileInput = document.querySelector('#file_input');
-    console.log(fileInput)
+
+    console.log(`${existingProducts.length} products have been found in the WP database.`) 
+    console.log(existingProducts)
+    console.log("Waiting for input file with product updates...")
 
     importBtn.addEventListener('mouseup', ev => {
         ev.preventDefault();
@@ -19,7 +23,7 @@ function run(){
         reader.onload = function() {
             csv(reader.result, {}, function(err, output){
                 if(err) console.err("CSV parser failed: ",err)
-                else processCSV(output)
+                else processCSV(output, existingProducts)
             })
         };
 
@@ -81,8 +85,15 @@ function buildProductSeries(attrRow, inputCSV){
     }
     return productSeries
 }
+function findProductChanges(updates){
+    return true
+}
 
-function processCSV(csv){
+function updateProducts(newProducts){
+    return true
+}
+
+function processCSV(csv, existingProducts){
 
     const attributes = csv[0]
 
@@ -91,51 +102,26 @@ function processCSV(csv){
         return false
     }
     
-    console.log(attributes)
-    
-    // Keyed on parent id
-    
-
     
     // Traverse through products and build product series object
-
-    // const productObjs
     const productSeries = buildProductSeries(attributes, csv)
     console.log(productSeries)
-    return false
+    const productUpdates = findProductChanges(productSeries, existingProducts)
 
-    // 
-    //    Product Number Generation
-    //
-    // With seperated product series and complete product objects, 
-    //     go by a specific series and find varying attributes.
-    
-    let seriesArray = Object.keys(productSeries)
-    for(let i = 0; i < seriesArray.length; i++){
-        let series = Object.values(productSeries[seriesArray[i]])
-        console.log(series)
-        let seriesVariations = []
-        let prevElem = Object.values(series[0])
+    updateProducts(productUpdates)
 
-        // Traverse products within a series
-        for(let j = 1; j < series.length; j++){
-            let prod = Object.values(series[j])
-            // Traverse attributes
-            for(let a = 0; a < prod.length; a++){
-                if(a === 0){
-                    console.log(`comparing ${prod[a]} and ${prevElem[a]}`)
-                }
-                if(prod[a] !== prevElem[a]){
-                    // confirmedVariationsIndices.push(a)
-                    seriesVariations.push(attributes[a])
-                }
-           }
-           prevElem = prod
-        }
-        console.log(seriesArray[i], seriesVariations)
-    }
+}
+
+async function fetcher(url){
+    return await fetch(url)
+    .then( res => {
+        return res.json()
+    })
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-    run()
+    // Run once the data as been fetched.
+    console.log("Fetching for existing products...")
+    fetcher('https://fillauer.test/wp-json/acf/v3/product')
+        .then(data=>run(data))
 })
