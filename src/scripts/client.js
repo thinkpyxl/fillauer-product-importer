@@ -1,34 +1,11 @@
 import csv from 'csv-parse'
 console.log('client-side script executed')
-//* ////////////////////////////////////////////////////
+
+// Globals to define spreadsheet column names
+
+const PICname = "Parent ID"
 
 
-function run(existingProducts){
-    const statusElm = document.querySelector('.import_status');
-    const importBtn = document.querySelector('#import_button');
-    const fileInput = document.querySelector('#file_input');
-
-    console.log(`${existingProducts.length} products have been found in the WP database.`) 
-    console.log(existingProducts)
-    console.log("Waiting for input file with product updates...")
-
-    importBtn.addEventListener('mouseup', ev => {
-        ev.preventDefault();
-        // props to https://javascript.info/file#filereader
-        let fileHandler = fileInput.files[0];
-        let reader = new FileReader();
-      
-        reader.readAsText(fileHandler);
-        
-        reader.onload = function() {
-            csv(reader.result, {}, function(err, output){
-                if(err) console.err("CSV parser failed: ",err)
-                else processCSV(output, existingProducts)
-            })
-        };
-
-    })
-}
 //   Mizner notes
 //                  https://wordpress.org/plugins/acf-to-rest-api/
         // Testing:
@@ -55,7 +32,6 @@ function buildProductObj(attrRow, productRow){
     return productObj
 }
 
-const PICname = "Parent ID"
 
 function buildProductSeries(attrRow, inputCSV){
     const productSeries = {}
@@ -86,10 +62,11 @@ function buildProductSeries(attrRow, inputCSV){
     return productSeries
 }
 function findProductChanges(updates){
-    return true
+    return updates
 }
 
 function updateProducts(newProducts){
+    console.log(newProducts['2050'][0])
     return true
 }
 
@@ -119,9 +96,65 @@ async function fetcher(url){
     })
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-    // Run once the data as been fetched.
+
+//  Main loop
+async function init(){
+    const statusElm = document.querySelector('.import_status');
+    const importBtn = document.querySelector('#import_button');
+    const fileInput = document.querySelector('#file_input');
+    const testBtn = document.querySelector("#test_button")
+    let existingProducts = null
+
+    // Block, Pull existing products, continue
     console.log("Fetching for existing products...")
-    fetcher('https://fillauer.test/wp-json/acf/v3/product')
-        .then(data=>run(data))
-})
+    await fetcher('https://fillauer.test/wp-json/acf/v3/product')
+        .then(data => existingProducts = data)
+
+    console.log(`${existingProducts.length} products have been found in the WP database.`) 
+    console.log(existingProducts)
+    console.log("Waiting for input file with product updates...")
+
+    testBtn.addEventListener('mouseup', ev => {
+        ev.preventDefault();
+        // Lance magic
+        fetch(
+            `${wpApiSettings.root}wp/v2/product`,
+            {
+                method: 'post',
+                headers: {
+                    'X-WP-Nonce': wpApiSettings.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: 'Hello Moon', content: '', excerpt:'' })
+            }
+        ).then(response => response.json().then(console.log)).catch(console.log)
+    })
+
+    importBtn.addEventListener('mouseup', ev => {
+        ev.preventDefault();
+        // props to https://javascript.info/file#filereader
+        let fileHandler = fileInput.files[0];
+        let reader = new FileReader();
+      
+        reader.readAsText(fileHandler);
+        
+        reader.onload = function() {
+            csv(reader.result, {}, function(err, output){
+                if(err) console.err("CSV parser failed: ",err)
+                else processCSV(output, existingProducts)
+            })
+        };
+
+    })
+
+
+}
+
+document.addEventListener('DOMContentLoaded', init)
+
+    //* /////////////////////////////////////
+    //         Testing WP API calls
+    //* /////////////////////////////////////
+    // Log possible routes
+    // fetcher('https://fillauer.test/wp-json')
+    //     .then(data=>console.log(data))
