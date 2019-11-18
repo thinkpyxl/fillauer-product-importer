@@ -37,7 +37,7 @@ function buildProductObjs(attrRow, rows, verbose=false){
     //   of product objects keyed to the attribute name
 
     // Splice to avoid first row of attribute names
-    return rows.splice(1).map((row) => {
+    const products = rows.splice(1).map((row) => {
         const product = {}
         row.map((val, ind) => {
             if(val !== '')
@@ -52,6 +52,7 @@ function buildProductObjs(attrRow, rows, verbose=false){
             return product
         } 
     })
+    return products.filter(prod => prod !== undefined)
 }
 
 
@@ -76,8 +77,8 @@ function keyByPIC( prods ){
 }
 
 
-function findProductChanges(updates){
-    return updates
+function findCollisionsWithProducts(newProds, existing){
+    return false
 }
 
 function updateProducts(newProducts){
@@ -96,12 +97,10 @@ function updateProducts(newProducts){
 function linkVariations(parents, varies){
 
     varies.map((val) => {
-        if(val === undefined || !parents[val[f_pic]]){
-            return false
+        if(!parents[val[f_pic]].variations) {
+            parents[val[f_pic]].variations = []
         }
 
-        if(!parents[val[f_pic]].variations) 
-            parents[val[f_pic]].variations = []
         parents[val[f_pic]].variations.push(val)
 
     })
@@ -134,8 +133,9 @@ function processCSV(parentCSV, variationCSV, existingProducts){
 
 
 
-    // Traverse through variations and build product series object
-    // const productUpdates = findProductChanges(productSeries, existingProducts)
+    //  Traverse through variations and build product series object
+    const collidingProducts = findCollisionsWithProducts(products, existingProducts)
+
     // updateProducts(productUpdates)
 
 }
