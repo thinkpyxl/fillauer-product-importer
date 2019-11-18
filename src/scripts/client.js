@@ -4,6 +4,7 @@ console.log('client-side script executed')
 // Globals to define spreadsheet column names
 
 const PICname = "PIC"
+const ProductTypeLabel = "Type"
 
 
 //   Mizner notes
@@ -29,15 +30,17 @@ async function fetcher(url){
     .catch(console.error)
 }
 
-function buildProductObj(attrRow, productRow){
-    const productObj = {}    
-
-    // no returns for map since I'm building a new object
-    productRow.map((val, ind) => {
-        if(val !== '')
-            productObj[attrRow[ind]] = val
+function buildProductObjs(attrRow, rows){
+    // This will go through a CSV and create an array
+    //   of product objects keyed to the attribute name
+    return rows.map((row) => {
+        const product = {}
+        row.map((val, ind) => {
+            if(val !== '')
+                product[attrRow[ind]] = val
+        })
+        return product
     })
-    return productObj
 }
 
 
@@ -80,17 +83,27 @@ function updateProducts(newProducts){
 // Parent Product functions
 
 // Variations to parents functions
+function linkVariations(prods, varies){
+    console.log(prods)
+    return true
+}
 
 function processCSV(parentCSV, variationCSV, existingProducts){
 
-    const attributes = parentCSV[0]
+    // The first row containing attribute names will CONSTantly be referenced
+    const parentAttr = parentCSV[0]
+    const variationAttr = variationCSV[0]
 
-    if(!attributes.includes(PICname)){
+    if(!parentAttr.includes(PICname) || !variationAttr.includes(PICname)){
         window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${PICname}" VERBATIM`)
         return false
     }
-    const importedProducts = buildProductObj(parentCSV)
+    const importedProducts = buildProductObjs(parentAttr, parentCSV)
+    const importedVariations = buildProductObjs(variationAttr, variationCSV)
     
+    const products = linkVariations(importedProducts, importedVariations)
+
+    return false
     // Traverse through variations and build product series object
     const productSeries = buildProductSeries(attributes, variationCSV)
     console.log(productSeries)
@@ -102,7 +115,7 @@ function processCSV(parentCSV, variationCSV, existingProducts){
 
 
 
-//  Main loop
+//  Main loop, async to allow blocking
 async function init(){
     const statusElm = document.querySelector('.import_status');
     const importBtn = document.querySelector('#import_button');
@@ -111,15 +124,21 @@ async function init(){
     const testBtn = document.querySelector("#test_button")
     let existingProducts = null
 
-    // Block, Pull existing products, continue
+
+    //* //////////////////////////////////////////////////////////////////////
+    //    Pull existing products, continue
     console.log("Fetching for existing products...")
+
     await fetcher('https://fillauer.test/wp-json/acf/v3/product')
         .then(data => existingProducts = data)
 
+
     console.log(`${existingProducts.length} products have been found in the WP database.`) 
     console.log(existingProducts)
-    console.log("Waiting for input file with product updates...")
 
+
+    //* //////////////////////////////////////////////////////////////////////
+    //    Test POST Call
     testBtn.addEventListener('mouseup', ev => {
         ev.preventDefault();
         // Lance magic
@@ -135,6 +154,11 @@ async function init(){
             }
         ).then(response => response.json().then(console.log)).catch(console.log)
     })
+
+    //* //////////////////////////////////////////////////////////////////////
+    //    IMPORT EVENT
+
+    console.log("Waiting for input file with product updates...")
 
     importBtn.addEventListener('mouseup', ev => {
         ev.preventDefault();
