@@ -35,7 +35,9 @@ async function fetcher(url){
 function buildProductObjs(attrRow, rows, verbose=false){
     // This will go through a CSV and create an array
     //   of product objects keyed to the attribute name
-    return rows.filter((row) => {
+
+    // Splice to avoid first row of attribute names
+    return rows.splice(1).map((row) => {
         const product = {}
         row.map((val, ind) => {
             if(val !== '')
@@ -49,47 +51,31 @@ function buildProductObjs(attrRow, rows, verbose=false){
         if(product !== undefined && product[f_name] && product[f_pic]){
             return product
         } 
-        return false
     })
 }
 
 
-function buildProductSeries(attrRow, prods){
-    const ProdBySKU = {}
-
-    return prods.map(val => {
-
-        if( !ProdBySKU[val[f_pic]] ){
-            ProdBySKU[val[f_pic]] = []
+// I need to use a linter...
+function keyByPIC( prods ){
+    const ProdByPIC = {}
+    prods.map(val => {
+        if(!val){
+            return false
         }
-        ProdBySKU[val[f_pic]] = val
+
+        if( !ProdByPIC[val[f_pic]] ){
+            ProdByPIC[val[f_pic]] = []
+        }
+
+        ProdByPIC[val[f_pic]] = val
+
         return val 
     })
 
-
-    inputCSV.splice(1).map((val) => {
-        const prod = buildProductObj(attrRow, val)
-        if(!prod){
-            console.log(val)
-        }
-
-        
-        
-        // New keys for new series introduced
-        if(!productSeries[prod[f_pic]]){
-            productSeries[prod[f_pic]] = []
-            productSeries[prod[f_pic]].push(prod)
-        } 
-        else{
-            productSeries[prod[f_pic]].push(prod)
-        }
-    })
-
-    if(Object.values(productSeries).length < 1){
-        console.error("No products series were created :(")
-    }
-    return productSeries
+    return ProdByPIC
 }
+
+
 function findProductChanges(updates){
     return updates
 }
@@ -107,10 +93,21 @@ function updateProducts(newProducts){
 
 //  Necessary as I will make whole products to POST with 
 //      information from both parent and variation
-function linkVariations(prods, varies){
-    return prods.map((val) => {
-        
+function linkVariations(parents, varies){
+
+    varies.map((val) => {
+        if(val === undefined || !parents[val[f_pic]]){
+            return false
+        }
+
+        if(!parents[val[f_pic]].variations) 
+            parents[val[f_pic]].variations = []
+        parents[val[f_pic]].variations.push(val)
+
     })
+
+    return parents
+
 }
 
 function processCSV(parentCSV, variationCSV, existingProducts){
@@ -126,20 +123,20 @@ function processCSV(parentCSV, variationCSV, existingProducts){
     const importedProducts = buildProductObjs(parentAttr, parentCSV)
     const importedVariations = buildProductObjs(variationAttr, variationCSV)
     
-    console.log(importedProducts)
-    console.log(importedVariations)
-    const productsByPIC = buildProductSeries(parentAttr, importedProducts)
-    // console.log(pr)
+    console.log('importedProducts', importedProducts)
+    console.log('importedVariations', importedVariations)
 
-    // const products = linkVariations(importedProducts, importedVariations)
+    const productsByPIC = keyByPIC(importedProducts)
+    console.log('parent productsByPIC ', productsByPIC)
 
-    return false
+    const products = linkVariations(productsByPIC, importedVariations)
+    console.log('complete products with variations', products)
+
+
+
     // Traverse through variations and build product series object
-    const productSeries = buildProductSeries(attributes, variationCSV)
-    console.log(productSeries)
-    const productUpdates = findProductChanges(productSeries, existingProducts)
-
-    updateProducts(productUpdates)
+    // const productUpdates = findProductChanges(productSeries, existingProducts)
+    // updateProducts(productUpdates)
 
 }
 
