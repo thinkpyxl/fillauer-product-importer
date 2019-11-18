@@ -1,5 +1,6 @@
 ## Plug-in ignores
 dist
+sample
 ## Globally Ignored
 .DS_Store
 node_modules
