@@ -23,9 +23,9 @@ const f_pic = "PIC"
         // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
         // 2.2 Handle errors.
 
-async function fetcher(url){
+async function fetcher(url, obj){
     // Some boilerplate for fetch calls
-    return await fetch(url)
+    return await fetch(url, obj)
     .then( res => {
         return res.json()
     })
@@ -109,6 +109,31 @@ function linkVariations(parents, varies){
 
 }
 
+function POSTproducts(prods){
+    // return console.log(Object.values(prods))
+    Object.values(prods).map(val => { 
+        fetcher(
+            `${wpApiSettings.root}wp/v2/product`,
+            {
+                method: 'post',
+                headers: {
+                    'X-WP-Nonce': wpApiSettings.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    title: val[f_name], 
+                    content: '', 
+                    excerpt: '' , 
+                    status: 'publish', 
+                    meta: {pic: val[f_pic] , product_type:val[f_type], Quantity:'1'}
+                })
+            }
+        )
+    })
+}
+
+
+
 function processCSV(parentCSV, variationCSV, existingProducts){
 
     // The first row containing attribute names will CONSTantly be referenced
@@ -132,11 +157,14 @@ function processCSV(parentCSV, variationCSV, existingProducts){
     console.log('complete products with variations', products)
 
 
+    //! Question !!!!
+    //  Do we want to save all the parent data inside of each variation post?
+    //    updateVariations(products)
 
     //  Traverse through variations and build product series object
     const collidingProducts = findCollisionsWithProducts(products, existingProducts)
 
-    // updateProducts(productUpdates)
+    POSTproducts(products)
 
 }
 
