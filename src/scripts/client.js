@@ -216,26 +216,26 @@ async function init(){
         ).then(response => response.json().then(console.log)).catch(console.log)
     })
 
-async function readFilePromise(fileHandler){
-    // And another shoutout to this link https://blog.shovonhasan.com/using-promises-with-filereader/
-        let reader = new FileReader();
-        reader.readAsText(fileHandler);
-        
-        return new Promise((resolve, reject)=>{
-            reader.onerror = function(){
-                reader.abort();
-                reject(new DOMException('Problem parsing input file.'))
-            }
-            reader.onload = function() {
-                csv(reader.result, {}, function(err, output){
-                    if(err) console.err("CSV parser failed: ",err)
-                    else resolve(output)
-                })
-            };
+    async function readFilePromise(fileHandler){
+        // And another shoutout to this link https://blog.shovonhasan.com/using-promises-with-filereader/
+            let reader = new FileReader();
+            reader.readAsText(fileHandler);
+            
+            return new Promise((resolve, reject)=>{
+                reader.onerror = function(){
+                    reader.abort();
+                    reject(new DOMException('Problem parsing input file.'))
+                }
+                reader.onload = function() {
+                    csv(reader.result, {}, function(err, output){
+                        if(err) console.err("CSV parser failed: ",err)
+                        else resolve(output)
+                    })
+                };
 
-        })
+            })
 
-}
+    }
 
     //* //////////////////////////////////////////////////////////////////////
     //    IMPORT EVENT
