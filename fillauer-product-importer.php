@@ -22,6 +22,28 @@ function register_processor(){
     wp_enqueue_script('product-import-processor');
 }
 
+add_action( 'rest_api_init', function () {
+    register_rest_field( 'product', 'meta', array(
+        'get_callback' => function( $data ) {
+            $listing_obj = get_post_meta( $data['id'], '', false );
+            return $listing_obj;
+        },
+        'update_callback' => function($value, $listing_obj, $field_name ) {
+            foreach ($value as $key => $value) {
+                #post id to link meta to
+                error_log($listing_obj->ID);
+                #name of the meta field to update/add
+                error_log($key);
+                #value of the meta field
+                error_log($value);
+                update_post_meta($listing_obj->ID, $key, $value);
+            }
+            return true;
+        },
+         'schema' => null,
+    ) );
+} );
+
 add_action('admin_menu', 'importer_menu');
 add_action('importer_enqueue_scripts', 'register_processor');
 //          ^^^ is creating a new action like this ok?
