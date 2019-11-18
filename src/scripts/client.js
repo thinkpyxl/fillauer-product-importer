@@ -111,7 +111,13 @@ function linkVariations(parents, varies){
 
 function POSTproducts(prods){
     // return console.log(Object.values(prods))
+    const statusElm = document.querySelector('.import_status');
+    const Nprod = Object.keys(prods).length
+    let cnt = 0
+    
+    statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`
     Object.values(prods).map(val => { 
+        val['variations'] = false
         fetcher(
             `${wpApiSettings.root}wp/v2/product`,
             {
@@ -125,10 +131,12 @@ function POSTproducts(prods){
                     content: '', 
                     excerpt: '' , 
                     status: 'publish', 
-                    meta: {pic: val[f_pic] , product_type:val[f_type], Quantity:'1'}
+                    meta: val
                 })
             }
-        )
+        ).then(()=>{
+            statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`
+        })
     })
 }
 
@@ -172,7 +180,6 @@ function processCSV(parentCSV, variationCSV, existingProducts){
 
 //  Main loop, async to allow blocking
 async function init(){
-    const statusElm = document.querySelector('.import_status');
     const importBtn = document.querySelector('#import_button');
     const parentFileInput = document.querySelector('#parent_file_input');
     const variationFileInput = document.querySelector('#variation_file_input');

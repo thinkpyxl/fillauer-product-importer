@@ -2,6 +2,7 @@
 
 <h1>Upload File</h1>
 <p>Select a parent product sheet and it's corresponding variations sheet.</p>
+<p><b>Status:</b><span class='import_status'></span></p>
 <form name='product_file_importer' enctype='multipart/form-data'>
       <input id='test_button' type='button' name='test_button' value='Test POST'>
       <br>
