@@ -7,6 +7,9 @@ const f_type = "Type"
 const f_name = 'Name'
 const f_sku = 'SKU'
 const f_pic = "PIC"
+//   The attribute column right before specifications start
+const b_SpecsStart = "Specification Start"
+const b_SpecsEnd   = "Specification End"
 
 
 //   Mizner notes
@@ -55,7 +58,6 @@ function buildProductObjs(attrRow, rows, verbose=false){
     return products.filter(prod => prod !== undefined)
 }
 
-
 // I need to use a linter...
 function keyByPIC( prods ){
     const ProdByPIC = {}
@@ -76,7 +78,6 @@ function keyByPIC( prods ){
     return ProdByPIC
 }
 
-
 function findCollisionsWithProducts(newProds, existing){
     return false
 }
@@ -85,15 +86,6 @@ function updateProducts(newProducts){
     return true
 }
 
-// Parent Product functions
-
-// Variations to parents functions
-
-// By linking variations to parent product objects, 
-//      am I making the compare process (wp vs csv) easier?
-
-//  Necessary as I will make whole products to POST with 
-//      information from both parent and variation
 function linkVariations(parents, varies){
 
     varies.map((val) => {
@@ -116,8 +108,8 @@ function POSTproducts(prods){
     let cnt = 0
 
     statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`
+    
     Object.values(prods).map(val => { 
-        val['variations'] = false
         fetcher(
             `${wpApiSettings.root}wp/v2/product`,
             {
@@ -165,7 +157,7 @@ function processCSV(parentCSV, variationCSV, existingProducts){
     console.log('complete products with variations', products)
 
 
-    //! Question !!!!
+    //   !!! Question !!!!
     //  Do we want to save all the parent data inside of each variation post?
     //    updateVariations(products)
 
