@@ -11,6 +11,9 @@ const f_pic = "PIC";
 const b_SpecsStart = "Specification Start";
 const b_SpecsEnd = "Specification End";
 
+// Status is updated in several functions
+const statusElm = document.querySelector(".import_status");
+
 //   Mizner notes
 //                  https://wordpress.org/plugins/acf-to-rest-api/
 // Testing:
@@ -95,7 +98,6 @@ function linkVariations(parents, varies) {
 
 function POSTproducts(prods) {
   // return console.log(Object.values(prods))
-  const statusElm = document.querySelector(".import_status");
   const Nprod = Object.keys(prods).length;
   let cnt = 0;
 
@@ -144,6 +146,7 @@ function processCSV(parentCSV, variationCSV, existingProducts) {
   const products = linkVariations(productsByPIC, importedVariations);
   console.log("complete products with variations", products);
 
+  statusElm.textContent = `Products have been processed. ${Object.keys(products).length} unique PICs found`
   return products;
   //  Traverse through variations and build product series object
   const collidingProducts = findCollisionsWithProducts(
@@ -176,6 +179,7 @@ async function readFilePromise(fileHandler) {
 //  Main loop, async to allow blocking
 async function init() {
   const importBtn = document.querySelector("#import_button");
+  const createBtn = document.querySelector("#create_button");
   const parentFileInput = document.querySelector("#parent_file_input");
   const variationFileInput = document.querySelector("#variation_file_input");
   const testBtn = document.querySelector("#test_button");
@@ -253,10 +257,17 @@ async function init() {
     ];
 
     Promise.all(readPromises).then(CSVs => {
-      processCSV(...CSVs, existingProducts);
+      newProducts = processCSV(...CSVs, existingProducts);
     });
   });
 
+  createBtn.addEventListener("mouseup", ev => {
+    if(!newProducts){
+        window.alert("Import a product sheet first")
+        return false
+    }
+    POSTproducts(newProducts)
+  })
   //* //////////////////////////////////////////////////////////////////
   //
 }
