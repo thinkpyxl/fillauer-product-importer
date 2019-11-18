@@ -114,7 +114,7 @@ function POSTproducts(prods){
     const statusElm = document.querySelector('.import_status');
     const Nprod = Object.keys(prods).length
     let cnt = 0
-    
+
     statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`
     Object.values(prods).map(val => { 
         val['variations'] = false
@@ -191,8 +191,15 @@ async function init(){
     //    Pull existing products, continue
     console.log("Fetching for existing products...")
 
-    await fetcher('https://fillauer.test/wp-json/wp/v2/product')
-        .then(data => existingProducts = data)
+    // Using the '&page' query parameter, build a pagination functionality that 
+    //    GETs until there are no more products left.
+    //    another shoutout: https://dev.to/jackedwardlyons/how-to-get-all-wordpress-posts-from-the-wp-api-with-javascript-3j48
+        // headers:{
+        //     'Access-Control-Allow-Origin': '*',
+        //     'Access-Control-Expose-Headers': 'x-wp-total'
+        // }
+    await fetcher('https://fillauer.test/wp-json/wp/v2/product?per_page=100')
+            .then(data => existingProducts = data)
 
 
     console.log(`${existingProducts.length} products have been found in the WP database.`) 
