@@ -129,7 +129,7 @@ async function init(){
     //    Pull existing products, continue
     console.log("Fetching for existing products...")
 
-    await fetcher('https://fillauer.test/wp-json/acf/v3/product')
+    await fetcher('https://fillauer.test/wp-json/wp/v2/product')
         .then(data => existingProducts = data)
 
 
@@ -150,7 +150,13 @@ async function init(){
                     'X-WP-Nonce': wpApiSettings.nonce,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ title: 'Hello Moon', content: '', excerpt:'' })
+                body: JSON.stringify({ 
+                    title: 'Hello Moon', 
+                    content: '', 
+                    excerpt: '' , 
+                    status: 'publish', 
+                    meta: {sku: 'asdf', product_type:'simple', pid:'12452364'}
+                })
             }
         ).then(response => response.json().then(console.log)).catch(console.log)
     })
