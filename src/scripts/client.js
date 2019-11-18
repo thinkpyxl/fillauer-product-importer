@@ -1,10 +1,12 @@
 import csv from 'csv-parse'
 console.log('client-side script executed')
 
-// Globals to define spreadsheet column names
-
-const PICname = "PIC"
-const ProductTypeLabel = "Type"
+// Globals to define spreadsheet column names, 
+//     in case something is changed later.
+const f_type = "Type"
+const f_name = 'Name'
+const f_sku = 'SKU'
+const f_pic = "PIC"
 
 
 //   Mizner notes
@@ -30,22 +32,40 @@ async function fetcher(url){
     .catch(console.error)
 }
 
-function buildProductObjs(attrRow, rows){
+function buildProductObjs(attrRow, rows, verbose=false){
     // This will go through a CSV and create an array
     //   of product objects keyed to the attribute name
-    return rows.map((row) => {
+    return rows.filter((row) => {
         const product = {}
         row.map((val, ind) => {
             if(val !== '')
                 product[attrRow[ind]] = val
         })
-        return product
+
+        // TODO: remove this debug line for production
+        if(verbose) console.log(product)
+
+        // Ignore blank rows or incomplete products
+        if(product !== undefined && product[f_name] && product[f_pic]){
+            return product
+        } 
+        return false
     })
 }
 
 
-function buildProductSeries(attrRow, inputCSV){
-    const productSeries = {}
+function buildProductSeries(attrRow, prods){
+    const ProdBySKU = {}
+
+    return prods.map(val => {
+
+        if( !ProdBySKU[val[f_pic]] ){
+            ProdBySKU[val[f_pic]] = []
+        }
+        ProdBySKU[val[f_pic]] = val
+        return val 
+    })
+
 
     inputCSV.splice(1).map((val) => {
         const prod = buildProductObj(attrRow, val)
@@ -53,17 +73,15 @@ function buildProductSeries(attrRow, inputCSV){
             console.log(val)
         }
 
-        // Ignore blank rows or fake products
-        if(prod === {} || prod[PICname] == undefined ) return false
         
         
         // New keys for new series introduced
-        if(!productSeries[prod[PICname]]){
-            productSeries[prod[PICname]] = []
-            productSeries[prod[PICname]].push(prod)
+        if(!productSeries[prod[f_pic]]){
+            productSeries[prod[f_pic]] = []
+            productSeries[prod[f_pic]].push(prod)
         } 
         else{
-            productSeries[prod[PICname]].push(prod)
+            productSeries[prod[f_pic]].push(prod)
         }
     })
 
@@ -83,9 +101,16 @@ function updateProducts(newProducts){
 // Parent Product functions
 
 // Variations to parents functions
+
+// By linking variations to parent product objects, 
+//      am I making the compare process (wp vs csv) easier?
+
+//  Necessary as I will make whole products to POST with 
+//      information from both parent and variation
 function linkVariations(prods, varies){
-    console.log(prods)
-    return true
+    return prods.map((val) => {
+        
+    })
 }
 
 function processCSV(parentCSV, variationCSV, existingProducts){
@@ -94,14 +119,19 @@ function processCSV(parentCSV, variationCSV, existingProducts){
     const parentAttr = parentCSV[0]
     const variationAttr = variationCSV[0]
 
-    if(!parentAttr.includes(PICname) || !variationAttr.includes(PICname)){
-        window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${PICname}" VERBATIM`)
+    if(!parentAttr.includes(f_pic) || !variationAttr.includes(f_pic)){
+        window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${f_pic}" VERBATIM`)
         return false
     }
     const importedProducts = buildProductObjs(parentAttr, parentCSV)
     const importedVariations = buildProductObjs(variationAttr, variationCSV)
     
-    const products = linkVariations(importedProducts, importedVariations)
+    console.log(importedProducts)
+    console.log(importedVariations)
+    const productsByPIC = buildProductSeries(parentAttr, importedProducts)
+    // console.log(pr)
+
+    // const products = linkVariations(importedProducts, importedVariations)
 
     return false
     // Traverse through variations and build product series object
