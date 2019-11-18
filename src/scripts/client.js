@@ -3,7 +3,7 @@ console.log('client-side script executed')
 
 // Globals to define spreadsheet column names
 
-const PICname = "Parent ID"
+const PICname = "PIC"
 
 
 //   Mizner notes
@@ -20,6 +20,14 @@ const PICname = "Parent ID"
         // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
         // 2.2 Handle errors.
 
+async function fetcher(url){
+    // Some boilerplate for fetch calls
+    return await fetch(url)
+    .then( res => {
+        return res.json()
+    })
+    .catch(console.error)
+}
 
 function buildProductObj(attrRow, productRow){
     const productObj = {}    
@@ -66,22 +74,25 @@ function findProductChanges(updates){
 }
 
 function updateProducts(newProducts){
-    console.log(newProducts['2050'][0])
     return true
 }
 
-function processCSV(csv, existingProducts){
+// Parent Product functions
 
-    const attributes = csv[0]
+// Variations to parents functions
+
+function processCSV(parentCSV, variationCSV, existingProducts){
+
+    const attributes = parentCSV[0]
 
     if(!attributes.includes(PICname)){
-        window.alert(`Make sure your spreadsheet Parent ID ie PIC attribute is using the name "${PICname}" VERBATIM`)
+        window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${PICname}" VERBATIM`)
         return false
     }
+    const importedProducts = buildProductObj(parentCSV)
     
-    
-    // Traverse through products and build product series object
-    const productSeries = buildProductSeries(attributes, csv)
+    // Traverse through variations and build product series object
+    const productSeries = buildProductSeries(attributes, variationCSV)
     console.log(productSeries)
     const productUpdates = findProductChanges(productSeries, existingProducts)
 
@@ -89,19 +100,14 @@ function processCSV(csv, existingProducts){
 
 }
 
-async function fetcher(url){
-    return await fetch(url)
-    .then( res => {
-        return res.json()
-    })
-}
 
 
 //  Main loop
 async function init(){
     const statusElm = document.querySelector('.import_status');
     const importBtn = document.querySelector('#import_button');
-    const fileInput = document.querySelector('#file_input');
+    const parentFileInput = document.querySelector('#parent_file_input');
+    const variationFileInput = document.querySelector('#variation_file_input');
     const testBtn = document.querySelector("#test_button")
     let existingProducts = null
 
@@ -132,21 +138,54 @@ async function init(){
 
     importBtn.addEventListener('mouseup', ev => {
         ev.preventDefault();
+
         // props to https://javascript.info/file#filereader
-        let fileHandler = fileInput.files[0];
-        let reader = new FileReader();
-      
-        reader.readAsText(fileHandler);
-        
-        reader.onload = function() {
-            csv(reader.result, {}, function(err, output){
-                if(err) console.err("CSV parser failed: ",err)
-                else processCSV(output, existingProducts)
-            })
-        };
+        const parentFileHandler = parentFileInput.files[0];
+        const variationFileHandler = variationFileInput.files[0];
+
+        if(parentFileHandler == undefined){
+            window.alert("Specify a parent product file first")
+            return false
+        }
+        if(variationFileHandler == undefined){
+            window.alert("Specify a variations file first")
+            return false
+        }
+
+        // Order matters for the sake of passing to processCSV 7 lines below
+        const readPromises = [
+            readFilePromise(parentFileHandler), 
+            readFilePromise(variationFileHandler)
+        ]
+
+        Promise.all(readPromises).then(CSVs=>{
+            processCSV(...CSVs, existingProducts)
+        })
+
 
     })
 
+
+}
+
+async function readFilePromise(fileHandler){
+    // And another shoutout to this link https://blog.shovonhasan.com/using-promises-with-filereader/
+        let reader = new FileReader();
+        reader.readAsText(fileHandler);
+        
+        return new Promise((resolve, reject)=>{
+            reader.onerror = function(){
+                reader.abort();
+                reject(new DOMException('Problem parsing input file.'))
+            }
+            reader.onload = function() {
+                csv(reader.result, {}, function(err, output){
+                    if(err) console.err("CSV parser failed: ",err)
+                    else resolve(output)
+                })
+            };
+
+        })
 
 }
 
