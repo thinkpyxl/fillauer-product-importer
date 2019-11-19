@@ -1,22 +1,23 @@
-import csv from "csv-parse";
-console.log("client-side script executed");
+/* eslint-disable no-undef */
+import csv from 'csv-parse';
+console.log('client-side script executed');
 
 // Globals to define spreadsheet column names,
 //     in case something is changed later.
-const f_type = "Type";
-const f_name = "Name";
-const f_sku = "SKU";
-const f_pic = "PIC";
-const f_cat = "tax:product_cat";
-const f_desc = "Description";
-const f_short_desc = "Short Description";
+const f_type = 'Type';
+const f_name = 'Name';
+const f_sku = 'SKU';
+const f_pic = 'PIC';
+const f_cat = 'tax:product_cat';
+const f_desc = 'Description';
+const f_short_desc = 'Short Description';
 
 //   The attribute column right before specifications start
-const b_SpecsStart = "Specification Start";
-const b_SpecsEnd = "Specification End";
+const b_SpecsStart = 'Specification Start';
+const b_SpecsEnd = 'Specification End';
 
 // Status is updated in several functions
-const statusElm = document.querySelector(".import_status");
+const statusElm = document.querySelector('.import_status');
 
 //   Mizner notes
 //                  https://wordpress.org/plugins/acf-to-rest-api/
@@ -53,7 +54,7 @@ function buildSpecs(attrRow) {
         return false;
       }
       // We haven't started or we have already ended
-      if (startIndex === -1 || endIndex !== -1) {
+      if (-1 === startIndex || -1 !== endIndex) {
         return false;
       }
 
@@ -67,8 +68,8 @@ function buildSpecs(attrRow) {
     })
     .filter(val => {
       if (val) return true;
-    })
-    // .push([startIndex, endIndex]);     // Do we want these indices?
+    });
+  // .push([startIndex, endIndex]);     // Do we want these indices?
 }
 
 function buildProductObjs(attrRow, rows, verbose = false) {
@@ -79,7 +80,7 @@ function buildProductObjs(attrRow, rows, verbose = false) {
   const products = rows.splice(1).map(row => {
     const product = {};
     row.map((val, ind) => {
-      if (val !== "") product[attrRow[ind]] = val;
+      if ('' !== val) product[attrRow[ind]] = val;
     });
 
     // TODO: remove this debug line for production
@@ -117,7 +118,7 @@ function findCollisionsWithProducts(newProds, existing) {
   if (!existing) return [];
   const rv = existing
     .map(val => {
-      if (newProds[val.acf["PIC"]]) return val.id;
+      if (newProds[val.acf['PIC']]) return val.id;
       else return false;
     })
     .filter(val => {
@@ -152,10 +153,10 @@ function deleteProduct(postID, verbose = false) {
       reject(postID);
     }
     fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
-      method: "delete",
+      method: 'delete',
       headers: {
-        "X-WP-Nonce": wpApiSettings.nonce,
-        "Content-Type": "application/json"
+        'X-WP-Nonce': wpApiSettings.nonce,
+        'Content-Type': 'application/json'
       }
     })
       .then(res => {
@@ -179,11 +180,11 @@ async function POSTproducts(prods, existingProducts) {
 
   //  Traverse through variations and build product series object
   const collidingProducts = findCollisionsWithProducts(prods, existingProducts);
-  if (collidingProducts.length > 0) {
+  if (0 < collidingProducts.length) {
     statusElm.textContent = `Product collisions found. Deleting ${collidingProducts.length} products...`;
   }
   await Promise.all(deleteProducts(collidingProducts)).then(status => {
-    console.log("finished deleting");
+    console.log('finished deleting');
   });
 
   statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
@@ -192,16 +193,16 @@ async function POSTproducts(prods, existingProducts) {
     const metaPack = filterMeta(val);
 
     fetcher(`${wpApiSettings.root}wp/v2/product`, {
-      method: "post",
+      method: 'post',
       headers: {
-        "X-WP-Nonce": wpApiSettings.nonce,
-        "Content-Type": "application/json"
+        'X-WP-Nonce': wpApiSettings.nonce,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         title: val[f_name],
         content: val[f_desc],
         excerpt: val[f_short_desc],
-        status: "publish",
+        status: 'publish',
         meta: metaPack
       })
     })
@@ -225,37 +226,39 @@ function processCSV(parentCSV, variationCSV) {
     return false;
   }
 
-  const specLabels = buildSpecs(parentAttr)
-  console.log('Specification Labels', specLabels)
+  const specLabels = buildSpecs(parentAttr);
+  console.log('Specification Labels', specLabels);
 
   const importedProducts = buildProductObjs(parentAttr, parentCSV);
   const importedVariations = buildProductObjs(variationAttr, variationCSV);
 
   const productsByPIC = keyByPIC(importedProducts);
 
-  const products = linkVariations(productsByPIC, importedVariations);
+  const products = linkVariations(
+    productsByPIC,
+    importedVariations,
+  );
 
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length
   } unique PICs found`;
-
 
   return products;
 }
 
 async function readFilePromise(fileHandler) {
   // And another shoutout to this link https://blog.shovonhasan.com/using-promises-with-filereader/
-  let reader = new FileReader();
+  const reader = new FileReader();
   reader.readAsText(fileHandler);
 
   return new Promise((resolve, reject) => {
     reader.onerror = function() {
       reader.abort();
-      reject(new DOMException("Problem parsing input file."));
+      reject(new DOMException('Problem parsing input file.'));
     };
     reader.onload = function() {
       csv(reader.result, {}, function(err, output) {
-        if (err) console.err("CSV parser failed: ", err);
+        if (err) console.err('CSV parser failed: ', err);
         else resolve(output);
       });
     };
@@ -264,17 +267,17 @@ async function readFilePromise(fileHandler) {
 
 //  Main loop, async to allow blocking
 async function init() {
-  const importBtn = document.querySelector("#import_button");
-  const createBtn = document.querySelector("#create_button");
-  const parentFileInput = document.querySelector("#parent_file_input");
-  const variationFileInput = document.querySelector("#variation_file_input");
-  const testBtn = document.querySelector("#test_button");
+  const importBtn = document.querySelector('#import_button');
+  const createBtn = document.querySelector('#create_button');
+  const parentFileInput = document.querySelector('#parent_file_input');
+  const variationFileInput = document.querySelector('#variation_file_input');
+  const testBtn = document.querySelector('#test_button');
   let existingProducts = null;
   let newProducts = null;
 
   //* //////////////////////////////////////////////////////////////////////
   //    Pull existing products, continue
-  console.log("Fetching for existing products...");
+  console.log('Fetching for existing products...');
 
   // Using the '&page' query parameter, build a pagination functionality that
   //    GETs until there are no more products left.
@@ -284,7 +287,7 @@ async function init() {
   //     'Access-Control-Expose-Headers': 'x-wp-total'
   // }
   await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
-    data => (existingProducts = data)
+    data => (existingProducts = data),
   );
 
   console.log(
@@ -294,21 +297,21 @@ async function init() {
 
   //* //////////////////////////////////////////////////////////////////////
   //    Test POST Call
-  testBtn.addEventListener("mouseup", ev => {
+  testBtn.addEventListener('mouseup', ev => {
     ev.preventDefault();
     // Lance magic
     fetch(`${wpApiSettings.root}wp/v2/product`, {
-      method: "post",
+      method: 'post',
       headers: {
-        "X-WP-Nonce": wpApiSettings.nonce,
-        "Content-Type": "application/json"
+        'X-WP-Nonce': wpApiSettings.nonce,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        title: "Hello Moon",
-        content: "",
-        excerpt: "",
-        status: "publish",
-        meta: { sku: "asdf", product_type: "simple", pid: "12452364" }
+        title: 'Hello Moon',
+        content: '',
+        excerpt: '',
+        status: 'publish',
+        meta: { sku: 'asdf', product_type: 'simple', pid: '12452364' },
       })
     })
       .then(response => response.json().then(console.log))
@@ -319,9 +322,9 @@ async function init() {
   //    IMPORT EVENT
 
   // TODO: Call this event once all the files are specified, removing need for btn
-  console.log("Waiting for input file with product updates...");
+  console.log('Waiting for input file with product updates...');
 
-  importBtn.addEventListener("mouseup", ev => {
+  importBtn.addEventListener('mouseup', ev => {
     ev.preventDefault();
 
     // props to https://javascript.info/file#filereader
@@ -329,18 +332,18 @@ async function init() {
     const variationFileHandler = variationFileInput.files[0];
 
     if (parentFileHandler == undefined) {
-      window.alert("Specify a parent product file first");
+      window.alert('Specify a parent product file first');
       return false;
     }
     if (variationFileHandler == undefined) {
-      window.alert("Specify a variations file first");
+      window.alert('Specify a variations file first');
       return false;
     }
 
     // Order matters for the sake of passing to processCSV 7 lines below
     const readPromises = [
       readFilePromise(parentFileHandler),
-      readFilePromise(variationFileHandler)
+      readFilePromise(variationFileHandler),
     ];
 
     Promise.all(readPromises).then(CSVs => {
@@ -348,9 +351,9 @@ async function init() {
     });
   });
 
-  createBtn.addEventListener("mouseup", ev => {
+  createBtn.addEventListener('mouseup', ev => {
     if (!newProducts) {
-      window.alert("Import a product sheet first");
+      window.alert('Import a product sheet first');
       return false;
     }
     POSTproducts(newProducts, existingProducts);
@@ -359,7 +362,7 @@ async function init() {
   //
 }
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener('DOMContentLoaded', init);
 
 //* /////////////////////////////////////
 //         Testing WP API calls
