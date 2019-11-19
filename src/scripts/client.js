@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import csv from 'csv-parse';
 console.log('client-side script executed');
@@ -196,15 +197,15 @@ async function POSTproducts(prods, existingProducts) {
       method: 'post',
       headers: {
         'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         title: val[f_name],
         content: val[f_desc],
         excerpt: val[f_short_desc],
         status: 'publish',
-        meta: metaPack
-      })
+        meta: metaPack,
+      }),
     })
       .then(res => {
         console.log(res);
