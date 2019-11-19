@@ -115,7 +115,7 @@ function POSTproducts(prods) {
   statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
 
   Object.values(prods).map(val => {
-    const metaPack = filterMeta(val)
+    const metaPack = filterMeta(val);
 
     fetcher(`${wpApiSettings.root}wp/v2/product`, {
       method: "post",
@@ -136,6 +136,29 @@ function POSTproducts(prods) {
         statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
       })
       .catch(console.error);
+  });
+}
+
+function deleteProduct(postID, verbose = false) {
+  if (!postID) {
+    return false;
+  }
+  fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
+    method: "delete",
+    headers: {
+      "X-WP-Nonce": wpApiSettings.nonce,
+      "Content-Type": "application/json"
+    }
+  })
+    .then(res => {
+      if (verbose) console.log(res);
+    })
+    .catch(console.error);
+}
+
+function deleteProducts(prods) {
+  prods.map(val => {
+    deleteProduct(val.id);
   });
 }
 
@@ -165,13 +188,16 @@ function processCSV(parentCSV, variationCSV, existingProducts) {
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length
   } unique PICs found`;
-  return products;
 
   //  Traverse through variations and build product series object
   const collidingProducts = findCollisionsWithProducts(
     products,
     existingProducts
   );
+
+  deleteProducts(collidingProducts);
+
+  return products;
 }
 
 async function readFilePromise(fileHandler) {
@@ -214,9 +240,11 @@ async function init() {
   //     'Access-Control-Allow-Origin': '*',
   //     'Access-Control-Expose-Headers': 'x-wp-total'
   // }
-  await fetcher(
-    "https://fillauer.test/wp-json/wp/v2/product?per_page=100"
-  ).then(data => (existingProducts = data));
+  await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`)
+    .then(data => (existingProducts = data))
+    .then(() => {
+      deleteProduct(existingProducts[0]);
+    });
 
   console.log(
     `${existingProducts.length} products have been found in the WP database.`
