@@ -84,8 +84,17 @@ function keyByPIC(prods) {
 }
 
 function findCollisionsWithProducts(newProds, existing) {
-  console.log(newProds, existing);
-  return false;
+  if (!existing) return [];
+  const rv = existing
+    .map(val => {
+      if (newProds[val.acf["PIC"]]) return val.id;
+      else return false;
+    })
+    .filter(val => {
+      if (val) return true;
+    });
+  console.log(rv);
+  return rv;
 }
 
 function linkVariations(parents, varies) {
@@ -107,10 +116,45 @@ function filterMeta(prod) {
   Object.keys(prod).map((attr, ind) => {});
 }
 
-function POSTproducts(prods) {
+function deleteProduct(postID, verbose = false) {
+  return new Promise((resolve, reject) => {
+    if (!postID) {
+      reject(postID);
+    }
+    fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
+      method: "delete",
+      headers: {
+        "X-WP-Nonce": wpApiSettings.nonce,
+        "Content-Type": "application/json"
+      }
+    })
+      .then(res => {
+        resolve(res);
+        if (verbose) console.log(res);
+      })
+      .catch(console.error);
+  });
+}
+
+function deleteProducts(prods) {
+  return prods.map(id => {
+    return deleteProduct(id, true);
+  });
+}
+
+async function POSTproducts(prods, existingProducts) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length;
   let cnt = 0;
+
+  //  Traverse through variations and build product series object
+  const collidingProducts = findCollisionsWithProducts(prods, existingProducts);
+  if(collidingProducts.length > 0){
+    statusElm.textContent = `Product collisions found. Deleting ${collidingProducts.length} products...`;
+  }
+  await Promise.all(deleteProducts(collidingProducts)).then(status => {
+    console.log("finished deleting");
+  });
 
   statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
 
@@ -139,30 +183,7 @@ function POSTproducts(prods) {
   });
 }
 
-function deleteProduct(postID, verbose = false) {
-  if (!postID) {
-    return false;
-  }
-  fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
-    method: "delete",
-    headers: {
-      "X-WP-Nonce": wpApiSettings.nonce,
-      "Content-Type": "application/json"
-    }
-  })
-    .then(res => {
-      if (verbose) console.log(res);
-    })
-    .catch(console.error);
-}
-
-function deleteProducts(prods) {
-  prods.map(val => {
-    deleteProduct(val.id);
-  });
-}
-
-function processCSV(parentCSV, variationCSV, existingProducts) {
+function processCSV(parentCSV, variationCSV) {
   // The first row containing attribute names will CONSTantly be referenced
   const parentAttr = parentCSV[0];
   const variationAttr = variationCSV[0];
@@ -189,13 +210,10 @@ function processCSV(parentCSV, variationCSV, existingProducts) {
     Object.keys(products).length
   } unique PICs found`;
 
-  //  Traverse through variations and build product series object
-  const collidingProducts = findCollisionsWithProducts(
-    products,
-    existingProducts
-  );
-
-  deleteProducts(collidingProducts);
+  statusElm.textContent = `Products have been processed. ${
+    Object.keys(products).length
+  } unique PICs found.
+  `;
 
   return products;
 }
@@ -240,11 +258,9 @@ async function init() {
   //     'Access-Control-Allow-Origin': '*',
   //     'Access-Control-Expose-Headers': 'x-wp-total'
   // }
-  await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`)
-    .then(data => (existingProducts = data))
-    .then(() => {
-      deleteProduct(existingProducts[0]);
-    });
+  await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
+    data => (existingProducts = data)
+  );
 
   console.log(
     `${existingProducts.length} products have been found in the WP database.`
@@ -303,7 +319,7 @@ async function init() {
     ];
 
     Promise.all(readPromises).then(CSVs => {
-      newProducts = processCSV(...CSVs, existingProducts);
+      newProducts = processCSV(...CSVs);
     });
   });
 
@@ -312,7 +328,7 @@ async function init() {
       window.alert("Import a product sheet first");
       return false;
     }
-    POSTproducts(newProducts);
+    POSTproducts(newProducts, existingProducts);
   });
   //* //////////////////////////////////////////////////////////////////
   //
