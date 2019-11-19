@@ -41,6 +41,36 @@ async function fetcher(url, obj) {
     .catch(console.error);
 }
 
+function buildSpecs(attrRow) {
+  let startIndex = -1;
+  let endIndex = -1;
+
+  return attrRow
+    .map((val, ind) => {
+      // Search for beginning
+      if (val === b_SpecsStart) {
+        startIndex = ind;
+        return false;
+      }
+      // We haven't started or we have already ended
+      if (startIndex === -1 || endIndex !== -1) {
+        return false;
+      }
+
+      // If inside of loop, return every value until the end (b_SpecsEnd) is found
+      if (val === b_SpecsEnd) {
+        endIndex = ind;
+        return false;
+      }
+      // If nothing worthy is found and we're still inside, we're tracking all Specification labels
+      return val;
+    })
+    .filter(val => {
+      if (val) return true;
+    })
+    // .push([startIndex, endIndex]);     // Do we want these indices?
+}
+
 function buildProductObjs(attrRow, rows, verbose = false) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
@@ -149,7 +179,7 @@ async function POSTproducts(prods, existingProducts) {
 
   //  Traverse through variations and build product series object
   const collidingProducts = findCollisionsWithProducts(prods, existingProducts);
-  if(collidingProducts.length > 0){
+  if (collidingProducts.length > 0) {
     statusElm.textContent = `Product collisions found. Deleting ${collidingProducts.length} products...`;
   }
   await Promise.all(deleteProducts(collidingProducts)).then(status => {
@@ -194,26 +224,21 @@ function processCSV(parentCSV, variationCSV) {
     );
     return false;
   }
+
+  const specLabels = buildSpecs(parentAttr)
+  console.log('Specification Labels', specLabels)
+
   const importedProducts = buildProductObjs(parentAttr, parentCSV);
   const importedVariations = buildProductObjs(variationAttr, variationCSV);
 
-  console.log("importedProducts", importedProducts);
-  console.log("importedVariations", importedVariations);
-
   const productsByPIC = keyByPIC(importedProducts);
-  console.log("parent productsByPIC ", productsByPIC);
 
   const products = linkVariations(productsByPIC, importedVariations);
-  console.log("complete products with variations", products);
 
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length
   } unique PICs found`;
 
-  statusElm.textContent = `Products have been processed. ${
-    Object.keys(products).length
-  } unique PICs found.
-  `;
 
   return products;
 }
