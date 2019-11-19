@@ -118,7 +118,7 @@ function findCollisionsWithProducts(newProds, existing) {
   if (!existing) return [];
   const rv = existing
     .map(val => {
-      if (newProds[val.acf['PIC']]) return val.id;
+      if (newProds[val.acf.PIC]) return val.id;
       else return false;
     })
     .filter(val => {
@@ -144,7 +144,7 @@ function linkVariations(parents, varies) {
 function filterMeta(prod) {
   return prod;
   // TODO pull out specification values
-  Object.keys(prod).map((attr, ind) => {});
+  // Object.keys(prod).map((attr, ind) => {});
 }
 
 function deleteProduct(postID, verbose = false) {
@@ -156,8 +156,8 @@ function deleteProduct(postID, verbose = false) {
       method: 'delete',
       headers: {
         'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
       .then(res => {
         resolve(res);
@@ -220,9 +220,7 @@ function processCSV(parentCSV, variationCSV) {
   const variationAttr = variationCSV[0];
 
   if (!parentAttr.includes(f_pic) || !variationAttr.includes(f_pic)) {
-    window.alert(
-      `Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${f_pic}" VERBATIM`
-    );
+    window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${f_pic}" VERBATIM`);
     return false;
   }
 
@@ -290,9 +288,7 @@ async function init() {
     data => (existingProducts = data),
   );
 
-  console.log(
-    `${existingProducts.length} products have been found in the WP database.`
-  );
+  console.log(`${existingProducts.length} products have been found in the WP database.`);
   console.log(existingProducts);
 
   //* //////////////////////////////////////////////////////////////////////
@@ -304,7 +300,7 @@ async function init() {
       method: 'post',
       headers: {
         'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         title: 'Hello Moon',
@@ -312,7 +308,7 @@ async function init() {
         excerpt: '',
         status: 'publish',
         meta: { sku: 'asdf', product_type: 'simple', pid: '12452364' },
-      })
+      }),
     })
       .then(response => response.json().then(console.log))
       .catch(console.log);
@@ -331,11 +327,11 @@ async function init() {
     const parentFileHandler = parentFileInput.files[0];
     const variationFileHandler = variationFileInput.files[0];
 
-    if (parentFileHandler == undefined) {
+    if (parentFileHandler === undefined) {
       window.alert('Specify a parent product file first');
       return false;
     }
-    if (variationFileHandler == undefined) {
+    if (variationFileHandler === undefined) {
       window.alert('Specify a variations file first');
       return false;
     }
