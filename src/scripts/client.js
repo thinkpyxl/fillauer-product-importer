@@ -7,6 +7,10 @@ const f_type = "Type";
 const f_name = "Name";
 const f_sku = "SKU";
 const f_pic = "PIC";
+const f_cat = "tax:product_cat";
+const f_desc = "Description";
+const f_short_desc = "Short Description";
+
 //   The attribute column right before specifications start
 const b_SpecsStart = "Specification Start";
 const b_SpecsEnd = "Specification End";
@@ -96,6 +100,13 @@ function linkVariations(parents, varies) {
   return parents;
 }
 
+// Used for creating meta object with grouped specifications
+function filterMeta(prod) {
+  return prod;
+  // TODO pull out specification values
+  Object.keys(prod).map((attr, ind) => {});
+}
+
 function POSTproducts(prods) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length;
@@ -104,6 +115,8 @@ function POSTproducts(prods) {
   statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
 
   Object.values(prods).map(val => {
+    const metaPack = filterMeta(val)
+
     fetcher(`${wpApiSettings.root}wp/v2/product`, {
       method: "post",
       headers: {
@@ -112,14 +125,17 @@ function POSTproducts(prods) {
       },
       body: JSON.stringify({
         title: val[f_name],
-        content: "",
-        excerpt: "",
+        content: val[f_desc],
+        excerpt: val[f_short_desc],
         status: "publish",
-        meta: val
+        meta: metaPack
       })
-    }).then(() => {
-      statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
-    });
+    })
+      .then(res => {
+        console.log(res);
+        statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+      })
+      .catch(console.error);
   });
 }
 
@@ -146,15 +162,16 @@ function processCSV(parentCSV, variationCSV, existingProducts) {
   const products = linkVariations(productsByPIC, importedVariations);
   console.log("complete products with variations", products);
 
-  statusElm.textContent = `Products have been processed. ${Object.keys(products).length} unique PICs found`
+  statusElm.textContent = `Products have been processed. ${
+    Object.keys(products).length
+  } unique PICs found`;
   return products;
+
   //  Traverse through variations and build product series object
   const collidingProducts = findCollisionsWithProducts(
     products,
     existingProducts
   );
-
-  POSTproducts(products);
 }
 
 async function readFilePromise(fileHandler) {
@@ -232,6 +249,7 @@ async function init() {
   //* //////////////////////////////////////////////////////////////////////
   //    IMPORT EVENT
 
+  // TODO: Call this event once all the files are specified, removing need for btn
   console.log("Waiting for input file with product updates...");
 
   importBtn.addEventListener("mouseup", ev => {
@@ -262,12 +280,12 @@ async function init() {
   });
 
   createBtn.addEventListener("mouseup", ev => {
-    if(!newProducts){
-        window.alert("Import a product sheet first")
-        return false
+    if (!newProducts) {
+      window.alert("Import a product sheet first");
+      return false;
     }
-    POSTproducts(newProducts)
-  })
+    POSTproducts(newProducts);
+  });
   //* //////////////////////////////////////////////////////////////////
   //
 }
