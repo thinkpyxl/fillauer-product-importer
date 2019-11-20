@@ -30,19 +30,45 @@ add_action( 'rest_api_init', function () {
         },
         'update_callback' => function($value, $listing_obj, $field_name ) {
             foreach ($value as $key => $value) {
-                #post id to link meta to
-                error_log($listing_obj->ID);
-                #name of the meta field to update/add
-                error_log($key);
-                #value of the meta field
-                error_log($value);
+                if($key == 'specs'){
+                    error_log(print_r($value, TRUE));
+                    // error_log(print_r(json_decode($value), TRUE));
+                }
                 update_post_meta($listing_obj->ID, $key, $value);
             }
             return true;
         },
          'schema' => null,
     ) );
+    register_rest_field( 'product', 'terms', array(
+        'get_callback' => function( $data ) {
+            $prod = get_post_meta( $data['id'], '', false );
+            return $prod;
+        },
+        'update_callback' => function($value, $prod, $field_name ) {
+
+            foreach ($value as $key => $value) {
+                error_log(print_r($key, TRUE));
+                error_log(print_r($value, TRUE));
+                if( !taxonomy_exists($key) ){
+                    error_log('Taxonomy: '.$key.' not found');
+                    // Register new taxonomy?
+                }
+                else {
+                    error_log('Taxonomy: '.$key.' found');
+                    wp_set_object_terms($prod->ID, $value, $key);
+                }
+
+
+                // error_log(print_r(json_decode($value), TRUE));
+            }
+            // update_post_meta($listing_obj->ID, $key, $value);
+            return true;
+        },
+         'schema' => null,
+    ) );
 } );
+
 
 add_action('admin_menu', 'importer_menu');
 add_action('importer_enqueue_scripts', 'register_processor');
