@@ -5,13 +5,16 @@ console.log('client-side script executed');
 
 // Globals to define spreadsheet column names,
 //     in case something is changed later.
-const f_type = 'Type';
-const f_name = 'Name';
-const f_sku = 'SKU';
-const f_pic = 'PIC';
-const f_cat = 'tax:product_cat';
-const f_desc = 'Description';
-const f_short_desc = 'Short Description';
+const f = {
+  type: 'Type',
+  name: 'Name',
+  sku: 'SKU',
+  pic: 'PIC',
+  cat: 'tax:product_cat',
+  tag: 'tax:product_tag',
+  desc: 'Description',
+  short_desc: 'Short Description',
+};
 
 //   The attribute column right before specifications start
 const b_SpecsStart = 'Specification Start';
@@ -43,52 +46,50 @@ async function fetcher(url, obj) {
     .catch(console.error);
 }
 
-function buildSpecs(attrRow) {
-  let startIndex = -1;
-  let endIndex = -1;
+function findSpecBounds(attrRow) {
+  let started = false;
 
   return attrRow
     .map((val, ind) => {
-      // Search for beginning
       if (val === b_SpecsStart) {
-        startIndex = ind;
-        return false;
-      }
-      // We haven't started or we have already ended
-      if (-1 === startIndex || -1 !== endIndex) {
-        return false;
+        started = true;
+        return ind;
       }
 
-      // If inside of loop, return every value until the end (b_SpecsEnd) is found
-      if (val === b_SpecsEnd) {
-        endIndex = ind;
-        return false;
+      if (val === b_SpecsEnd && started) {
+        return ind;
       }
-      // If nothing worthy is found and we're still inside, we're tracking all Specification labels
-      return val;
+      return false;
     })
     .filter(val => {
-      if (val) return true;
+      if (false !== val) return true; // I know this looks silly, but what if val == 0?
     });
-  // .push([startIndex, endIndex]);     // Do we want these indices?
 }
 
 function buildProductObjs(attrRow, rows, verbose = false) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
-
+  const [start, end] = findSpecBounds(attrRow);
   // Splice to avoid first row of attribute names
   const products = rows.splice(1).map(row => {
     const product = {};
+    product.specs = {};
     row.map((val, ind) => {
-      if ('' !== val) product[attrRow[ind]] = val;
+      if ('' !== val) {
+        // Specification or generic product information
+        if (start < ind && ind < end) {
+          product.specs[attrRow[ind]] = val;
+        } else {
+          product[attrRow[ind]] = val;
+        }
+      }
     });
 
     // TODO: remove this debug line for production
     if (verbose) console.log(product);
 
     // Ignore blank rows or incomplete products
-    if (product !== undefined && product[f_name] && product[f_pic]) {
+    if (product !== undefined && product[f.name] && product[f.pic]) {
       return product;
     }
   });
@@ -103,11 +104,11 @@ function keyByPIC(prods) {
       return false;
     }
 
-    if (!ProdByPIC[val[f_pic]]) {
-      ProdByPIC[val[f_pic]] = [];
+    if (!ProdByPIC[val[f.pic]]) {
+      ProdByPIC[val[f.pic]] = [];
     }
 
-    ProdByPIC[val[f_pic]] = val;
+    ProdByPIC[val[f.pic]] = val;
 
     return val;
   });
@@ -131,18 +132,19 @@ function findCollisionsWithProducts(newProds, existing) {
 
 function linkVariations(parents, varies) {
   varies.map(val => {
-    if (!parents[val[f_pic]].variations) {
-      parents[val[f_pic]].variations = [];
+    if (undefined === parents[val[f.pic]]) return false;
+    if (!parents[val[f.pic]].variations) {
+      parents[val[f.pic]].variations = [];
     }
 
-    parents[val[f_pic]].variations.push(val);
+    parents[val[f.pic]].variations.push(val);
   });
 
   return parents;
 }
 
 // Used for creating meta object with grouped specifications
-function filterMeta(prod) {
+function filterSpecs() {
   return prod;
   // TODO pull out specification values
   // Object.keys(prod).map((attr, ind) => {});
@@ -174,6 +176,10 @@ function deleteProducts(prods) {
   });
 }
 
+function verifyFields(prod) {
+  return prod;
+}
+
 async function POSTproducts(prods, existingProducts) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length;
@@ -184,59 +190,74 @@ async function POSTproducts(prods, existingProducts) {
   if (0 < collidingProducts.length) {
     statusElm.textContent = `Product collisions found. Deleting ${collidingProducts.length} products...`;
   }
-  await Promise.all(deleteProducts(collidingProducts)).then(status => {
-    console.log('finished deleting');
-  });
+  await Promise.all(deleteProducts(collidingProducts)).then(
+    status => {
+      console.log('finished deleting');
+    },
+  );
 
   statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
 
-  Object.values(prods).map(val => {
-    const metaPack = filterMeta(val);
-
-    fetcher(`${wpApiSettings.root}wp/v2/product`, {
-      method: 'post',
-      headers: {
-        'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: val[f_name],
-        content: val[f_desc],
-        excerpt: val[f_short_desc],
-        status: 'publish',
-        meta: metaPack,
-      }),
-    })
-      .then(res => {
-        console.log(res);
-        statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+  Object.values(prods)
+    .map(val => {
+      verifyFields(val);
+      fetcher(`${wpApiSettings.root}wp/v2/product`, {
+        method: 'post',
+        headers: {
+          'X-WP-Nonce': wpApiSettings.nonce,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: val[f.name],
+          content: val[f.desc],
+          excerpt: val[f.short_desc],
+          status: 'publish',
+          terms: {
+            product_cat: [val[f.cat]],
+            product_tag: [val[f.tag]],
+          },
+          meta: {
+            SKU: val[f.sku],
+            PIC: val[f.pic],
+            product_type: val[f.type],
+          },
+          specs: val.specs,
+          // accessories: {
+          //   fitting: { skus: ['1', '2'], headers: ['color', 'size'] },
+          // },
+        }),
       })
-      .catch(console.error);
-  });
+        .then(res => {
+          console.log(res);
+          statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+        })
+        .catch(console.error);
+    });
 }
+
+// Find the specs that vary across variations
+// TODO: Finish
+// function findVariationSpecs(variations) {
 
 function processCSV(parentCSV, variationCSV) {
   // The first row containing attribute names will CONSTantly be referenced
   const parentAttr = parentCSV[0];
   const variationAttr = variationCSV[0];
 
-  if (!parentAttr.includes(f_pic) || !variationAttr.includes(f_pic)) {
-    window.alert(`Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${f_pic}" VERBATIM`);
+  if (!parentAttr.includes(f.pic) || !variationAttr.includes(f.pic)) {
+    window.alert(
+      `Make sure your spreadsheet's "Parent ID" ie "PIC" attribute is using the name "${f.pic}" VERBATIM`,
+    );
     return false;
   }
 
-  const specLabels = buildSpecs(parentAttr);
-  console.log('Specification Labels', specLabels);
-
   const importedProducts = buildProductObjs(parentAttr, parentCSV);
   const importedVariations = buildProductObjs(variationAttr, variationCSV);
+  console.log('imported', importedProducts, importedVariations);
 
   const productsByPIC = keyByPIC(importedProducts);
 
-  const products = linkVariations(
-    productsByPIC,
-    importedVariations,
-  );
+  const products = linkVariations(productsByPIC, importedVariations);
 
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length
@@ -281,15 +302,14 @@ async function init() {
   // Using the '&page' query parameter, build a pagination functionality that
   //    GETs until there are no more products left.
   //    another shoutout: https://dev.to/jackedwardlyons/how-to-get-all-wordpress-posts-from-the-wp-api-with-javascript-3j48
-  // headers:{
-  //     'Access-Control-Allow-Origin': '*',
-  //     'Access-Control-Expose-Headers': 'x-wp-total'
-  // }
+
   await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
     data => (existingProducts = data),
   );
 
-  console.log(`${existingProducts.length} products have been found in the WP database.`);
+  console.log(
+    `${existingProducts.length} products have been found in the WP database.`,
+  );
   console.log(existingProducts);
 
   //* //////////////////////////////////////////////////////////////////////
@@ -308,7 +328,7 @@ async function init() {
         content: '',
         excerpt: '',
         status: 'publish',
-        meta: { sku: 'asdf', product_type: 'simple', pid: '12452364' },
+        meta: { sku: 'asdf', product_type: 'simple', pic: '12452364' },
       }),
     })
       .then(response => response.json().then(console.log))
@@ -355,15 +375,6 @@ async function init() {
     }
     POSTproducts(newProducts, existingProducts);
   });
-  //* //////////////////////////////////////////////////////////////////
-  //
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
-//* /////////////////////////////////////
-//         Testing WP API calls
-//* /////////////////////////////////////
-// Log possible routes
-// fetcher('https://fillauer.test/wp-json')
-//     .then(data=>console.log(data))
