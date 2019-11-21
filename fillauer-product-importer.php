@@ -29,44 +29,59 @@ add_action( 'rest_api_init', function () {
             return $listing_obj;
         },
         'update_callback' => function($value, $listing_obj, $field_name ) {
+            // error_log('meta '.print_r($value, TRUE));
             foreach ($value as $key => $value) {
-                if($key == 'specs'){
-                    error_log(print_r($value, TRUE));
-                    // error_log(print_r(json_decode($value), TRUE));
-                }
                 update_post_meta($listing_obj->ID, $key, $value);
             }
             return true;
         },
          'schema' => null,
     ) );
-    register_rest_field( 'product', 'terms', array(
-        'get_callback' => function( $data ) {
-            $prod = get_post_meta( $data['id'], '', false );
-            return $prod;
-        },
+    register_rest_field( 'product', 'specs', array(
         'update_callback' => function($value, $prod, $field_name ) {
-
+            // error_log('specs '.print_r($value, TRUE));
             foreach ($value as $key => $value) {
-                error_log(print_r($key, TRUE));
-                error_log(print_r($value, TRUE));
-                if( !taxonomy_exists($key) ){
-                    error_log('Taxonomy: '.$key.' not found');
-                    // Register new taxonomy?
-                }
-                else {
-                    error_log('Taxonomy: '.$key.' found');
-                    wp_set_object_terms($prod->ID, $value, $key);
-                }
 
-
-                // error_log(print_r(json_decode($value), TRUE));
+                $group[] = array('spec_label' => $key, 'spec_value' => $value[0], 'logo' => $value[1]);
+                update_field('specifications', $group ,$prod->ID);
             }
-            // update_post_meta($listing_obj->ID, $key, $value);
             return true;
         },
          'schema' => null,
     ) );
+    register_rest_field( 'product', 'accessories', array(
+        'update_callback' => function($value, $prod, $field_name ) {
+
+            // TODO: Support for multiple accessory gra
+            foreach ($value as $key => $value) {
+                error_log('accessories '.print_r($value, TRUE));
+                // Create Accessory group
+                $group[] = array(
+                    'group_label' => $key, 
+                );
+                update_field('accessory_groups', $group ,$prod->ID);
+
+                // Add SKUs
+                foreach($value['skus'] as $val){
+                    add_sub_row(
+                        array('accessory_groups',1 , 'skus'), 
+                        array('sku' => $val),
+                        $prod->ID);
+                }
+                // Add Headers (for model B accessory tables)
+                foreach($value['headers'] as $val){
+                    add_sub_row(
+                        array('accessory_groups',1 , 'headers'), 
+                        array('header' => $val),
+                        $prod->ID);
+                }
+
+            }
+            return true;
+        },
+         'schema' => null,
+    ) );
+
 } );
 
 
