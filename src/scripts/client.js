@@ -14,6 +14,7 @@ const f = {
   tag: 'tax:product_tag',
   desc: 'Description',
   short_desc: 'Short Description',
+  visibility: 'Visibility in catalog',
 };
 
 //   The attribute column right before specifications start
@@ -78,7 +79,11 @@ function buildProductObjs(attrRow, rows, verbose = false) {
       if ('' !== val) {
         // Specification or generic product information
         if (start < ind && ind < end) {
-          product.specs[attrRow[ind]] = val;
+          product.specs[attrRow[ind]] = [];
+          // Value
+          product.specs[attrRow[ind]].push(val);
+          // Icon
+          product.specs[attrRow[ind]].push('icon');
         } else {
           product[attrRow[ind]] = val;
         }
@@ -176,7 +181,9 @@ function deleteProducts(prods) {
   });
 }
 
+// confirm definition of properties that will be used in POST
 function verifyFields(prod) {
+  // console.log(prod);
   return prod;
 }
 
@@ -211,8 +218,8 @@ async function POSTproducts(prods, existingProducts) {
           title: val[f.name],
           content: val[f.desc],
           excerpt: val[f.short_desc],
-          status: 'publish',
-          terms: {
+          status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
+          terms: { // TODO: endpoint for taxonomies
             product_cat: [val[f.cat]],
             product_tag: [val[f.tag]],
           },
