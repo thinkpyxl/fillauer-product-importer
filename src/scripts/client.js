@@ -66,12 +66,26 @@ function findSpecBounds(attrRow) {
       if (false !== val) return true; // I know this looks silly, but what if val == 0?
     });
 }
+function findSpecIcons(attrRow, row) {
+  const icons = {};
+  if (!row.includes('ICON')) {
+    window.alert('Are you sure your defining specification icons?');
+  }
+  row.map((val, ind) => {
+    if ('' !== val && 'ICON' !== val) {
+      icons[attrRow[ind]] = val;
+    }
+  });
+  return icons;
+}
 
 function buildProductObjs(attrRow, rows, verbose = false) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
   const [start, end] = findSpecBounds(attrRow);
-  // Splice to avoid first row of attribute names
+  const icons = findSpecIcons(attrRow, rows[1]);
+
+  // Splice to avoid first two rows of attribute names and icons
   const products = rows.splice(1).map(row => {
     const product = {};
     product.specs = {};
@@ -83,7 +97,8 @@ function buildProductObjs(attrRow, rows, verbose = false) {
           // Value
           product.specs[attrRow[ind]].push(val);
           // Icon
-          product.specs[attrRow[ind]].push('icon');
+          // TODO: Actually read icon codes from 2nd row
+          product.specs[attrRow[ind]].push(icons[attrRow[ind]]);
         } else {
           product[attrRow[ind]] = val;
         }
@@ -125,7 +140,7 @@ function findCollisionsWithProducts(newProds, existing) {
   if (!existing) return [];
   const rv = existing
     .map(val => {
-      if (newProds[val.acf.PIC]) return val.id;
+      if (newProds[val.meta.PIC]) return val.id;
       else return false;
     })
     .filter(val => {
@@ -142,7 +157,11 @@ function linkVariations(parents, varies) {
       parents[val[f.pic]].variations = [];
     }
 
-    parents[val[f.pic]].variations.push(val);
+    parents[val[f.pic]].variations.push({
+      name: val[f.name],
+      sku: val[f.sku],
+      specs: val.specs,
+    });
   });
 
   return parents;
@@ -229,6 +248,7 @@ async function POSTproducts(prods, existingProducts) {
             product_type: val[f.type],
           },
           specs: val.specs,
+          variations: val.variations,
           // accessories: {
           //   fitting: { skus: ['1', '2'], headers: ['color', 'size'] },
           // },
@@ -265,6 +285,7 @@ function processCSV(parentCSV, variationCSV) {
   const productsByPIC = keyByPIC(importedProducts);
 
   const products = linkVariations(productsByPIC, importedVariations);
+  console.log('assembled ', products);
 
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length

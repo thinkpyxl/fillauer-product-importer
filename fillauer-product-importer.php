@@ -52,7 +52,7 @@ add_action(
 			'specs',
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
-					// error_log('specs '.print_r($value, TRUE));
+					error_log( 'specs ' . print_r( $value, true ) );
 					foreach ( $value as $key => $value ) {
 
 						$group[] = [
@@ -73,7 +73,7 @@ add_action(
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
 
-					// TODO: Support for multiple accessory gra
+					// TODO: Support for multiple accessory groups
 					foreach ( $value as $key => $value ) {
 						// error_log( 'accessories ' . print_r( $value, true ) );
 						// Create Accessory group
@@ -98,6 +98,42 @@ add_action(
 								$prod->ID
 							);
 						}
+					}
+					return true;
+				},
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'variations',
+			[
+				'update_callback' => function( $value, $prod, $field_name ) {
+
+					$variation_index = 1;
+					foreach ( $value as $key => $value ) {
+						// Create Variation
+						$group[] = [
+							'variation_sku'  => $value['sku'],
+							'variation_name' => $value['name'],
+						];
+						update_field( 'variations', $group, $prod->ID );
+
+						// Add Specifications for each variation entry
+						foreach ( $value['specs'] as $label => $val ) {
+							error_log( 'variations label' . print_r( $label, true ) );
+							error_log( 'variations value' . print_r( $val, true ) );
+							add_sub_row(
+								[ 'variations', $variation_index, 'variation_specs' ],
+								[
+									'spec_label' => $label,
+									'spec_value' => $val[0],
+									// 'spec_icon'  => $val[1]   // Not used unless varying specs use an icon
+								],
+								$prod->ID
+							);
+						}
+						$variation_index += 1;
 					}
 					return true;
 				},
