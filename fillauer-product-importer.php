@@ -26,6 +26,8 @@ function register_processor() {
 	wp_enqueue_script( 'product-import-processor' );
 }
 
+// TODO: endpoint for taxonomies
+
 add_action(
 	'rest_api_init',
 	function () {
@@ -52,13 +54,14 @@ add_action(
 			'specs',
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
-					error_log( 'specs ' . print_r( $value, true ) );
+					// error_log( 'specs ' . print_r( $value, true ) );
 					foreach ( $value as $key => $value ) {
 
 						$group[] = [
 							'spec_label' => $key,
 							'spec_value' => $value[0],
 							'logo'       => $value[1],
+							// 'featured'   => $value[2],
 						];
 						update_field( 'specifications', $group, $prod->ID );
 					}
@@ -121,8 +124,6 @@ add_action(
 
 						// Add Specifications for each variation entry
 						foreach ( $value['specs'] as $label => $val ) {
-							error_log( 'variations label' . print_r( $label, true ) );
-							error_log( 'variations value' . print_r( $val, true ) );
 							add_sub_row(
 								[ 'variations', $variation_index, 'variation_specs' ],
 								[
@@ -134,6 +135,25 @@ add_action(
 							);
 						}
 						$variation_index += 1;
+					}
+					return true;
+				},
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'terms',
+			[
+				'update_callback' => function( $value, $prod, $field_name ) {
+
+					error_log( 'taxes array ' . print_r( $value, true ) );
+					foreach ( $value as $key => $value ) {
+						error_log( 'taxes key ' . print_r( $key, true ) );
+						error_log( 'taxes value ' . print_r( $value[0], true ) );
+						if( taxonomy_exists($key) ){
+							error_log(print_r(wp_set_post_terms($prod->ID, $value[0], $key), true ) );
+						}
 					}
 					return true;
 				},
