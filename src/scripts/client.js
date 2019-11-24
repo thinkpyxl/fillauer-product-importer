@@ -96,9 +96,16 @@ function buildProductObjs(attrRow, rows, verbose = false) {
           product.specs[attrRow[ind]] = [];
           // Value
           product.specs[attrRow[ind]].push(val);
+
           // Icon
-          // TODO: Actually read icon codes from 2nd row
           product.specs[attrRow[ind]].push(icons[attrRow[ind]]);
+
+          // Featured or Additional
+          // if (val.include('*')) {
+          //   product.specs[attrRow[ind]].push(true);
+          // } else {
+          //   product.specs[attrRow[ind]].push(false);
+          // }
         } else {
           product[attrRow[ind]] = val;
         }
@@ -249,9 +256,19 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations,
-          // accessories: {
-          //   fitting: { skus: ['1', '2'], headers: ['color', 'size'] },
-          // },
+          /* packages: [
+            {
+              label: 'Fitting Tools',
+              model: 'A',
+              pic: 5012,
+              skus: ['123-AD', '243-BC'],
+              headers: ['color', 'size'],
+              product_info: [
+                'description', '
+                image'
+              ]
+            },
+          ],  */
         }),
       })
         .then(res => {
@@ -306,7 +323,7 @@ async function readFilePromise(fileHandler) {
     };
     reader.onload = function() {
       csv(reader.result, {}, function(err, output) {
-        if (err) console.err('CSV parser failed: ', err);
+        if (err) console.error('CSV parser failed: ', err);
         else resolve(output);
       });
     };
