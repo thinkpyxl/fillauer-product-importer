@@ -1,8 +1,6 @@
 ## Plug-in ignores
 dist
 sample
-# Until I decide to use this. Delete for production.
-/src/scripts/utils.js
 ## Globally Ignored
 .DS_Store
 node_modules

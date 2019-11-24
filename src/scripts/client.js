@@ -1,25 +1,10 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
-import csv from 'csv-parse';
+import { f } from './fields.js';
+import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, verifyFields } from './filters.js';
+import { fetcher, deleteProducts, readFilePromise } from './utils.js';
+
 console.log('client-side script executed');
-
-// Globals to define spreadsheet column names,
-//     in case something is changed later.
-const f = {
-  type: 'Type',
-  name: 'Name',
-  sku: 'SKU',
-  pic: 'PIC',
-  cat: 'tax:product_cat',
-  tag: 'tax:product_tag',
-  desc: 'Description',
-  short_desc: 'Short Description',
-  visibility: 'Visibility in catalog',
-};
-
-//   The attribute column right before specifications start
-const b_SpecsStart = 'Specification Start';
-const b_SpecsEnd = 'Specification End';
 
 // Status is updated in several functions
 const statusElm = document.querySelector('.import_status');
@@ -37,47 +22,6 @@ const statusElm = document.querySelector('.import_status');
 // 2.1 Format data in current iteration
 // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
 // 2.2 Handle errors.
-
-async function fetcher(url, obj) {
-  // Some boilerplate for fetch calls
-  return await fetch(url, obj)
-    .then(res => {
-      return res.json();
-    })
-    .catch(console.error);
-}
-
-function findSpecBounds(attrRow) {
-  let started = false;
-
-  return attrRow
-    .map((val, ind) => {
-      if (val === b_SpecsStart) {
-        started = true;
-        return ind;
-      }
-
-      if (val === b_SpecsEnd && started) {
-        return ind;
-      }
-      return false;
-    })
-    .filter(val => {
-      if (false !== val) return true; // I know this looks silly, but what if val == 0?
-    });
-}
-function findSpecIcons(attrRow, row) {
-  const icons = {};
-  if (!row.includes('ICON')) {
-    window.alert('Are you sure your defining specification icons?');
-  }
-  row.map((val, ind) => {
-    if ('' !== val && 'ICON' !== val) {
-      icons[attrRow[ind]] = val;
-    }
-  });
-  return icons;
-}
 
 function buildProductObjs(attrRow, rows, verbose = false) {
   // This will go through a CSV and create an array
@@ -121,96 +65,6 @@ function buildProductObjs(attrRow, rows, verbose = false) {
     }
   });
   return products.filter(prod => prod !== undefined);
-}
-
-// I need to use a linter...
-function keyByPIC(prods) {
-  const ProdByPIC = {};
-  prods.map(val => {
-    if (!val) {
-      return false;
-    }
-
-    if (!ProdByPIC[val[f.pic]]) {
-      ProdByPIC[val[f.pic]] = [];
-    }
-
-    ProdByPIC[val[f.pic]] = val;
-
-    return val;
-  });
-
-  return ProdByPIC;
-}
-
-function findCollisionsWithProducts(newProds, existing) {
-  if (!existing) return [];
-  const rv = existing
-    .map(val => {
-      if (newProds[val.meta.PIC]) return val.id;
-      else return false;
-    })
-    .filter(val => {
-      if (val) return true;
-    });
-  console.log(rv);
-  return rv;
-}
-
-function linkVariations(parents, varies) {
-  varies.map(val => {
-    if (undefined === parents[val[f.pic]]) return false;
-    if (!parents[val[f.pic]].variations) {
-      parents[val[f.pic]].variations = [];
-    }
-
-    parents[val[f.pic]].variations.push({
-      name: val[f.name],
-      sku: val[f.sku],
-      specs: val.specs,
-    });
-  });
-
-  return parents;
-}
-
-// Used for creating meta object with grouped specifications
-function filterSpecs() {
-  return prod;
-  // TODO pull out specification values
-  // Object.keys(prod).map((attr, ind) => {});
-}
-
-function deleteProduct(postID, verbose = false) {
-  return new Promise((resolve, reject) => {
-    if (!postID) {
-      reject(postID);
-    }
-    fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
-      method: 'delete',
-      headers: {
-        'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(res => {
-        resolve(res);
-        if (verbose) console.log(res);
-      })
-      .catch(console.error);
-  });
-}
-
-function deleteProducts(prods) {
-  return prods.map(id => {
-    return deleteProduct(id, true);
-  });
-}
-
-// confirm definition of properties that will be used in POST
-function verifyFields(prod) {
-  // console.log(prod);
-  return prod;
 }
 
 async function POSTproducts(prods, existingProducts) {
@@ -309,25 +163,6 @@ function processCSV(parentCSV, variationCSV) {
   } unique PICs found`;
 
   return products;
-}
-
-async function readFilePromise(fileHandler) {
-  // And another shoutout to this link https://blog.shovonhasan.com/using-promises-with-filereader/
-  const reader = new FileReader();
-  reader.readAsText(fileHandler);
-
-  return new Promise((resolve, reject) => {
-    reader.onerror = function() {
-      reader.abort();
-      reject(new DOMException('Problem parsing input file.'));
-    };
-    reader.onload = function() {
-      csv(reader.result, {}, function(err, output) {
-        if (err) console.error('CSV parser failed: ', err);
-        else resolve(output);
-      });
-    };
-  });
 }
 
 //  Main loop, async to allow blocking
