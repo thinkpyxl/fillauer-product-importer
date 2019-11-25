@@ -136,32 +136,34 @@ function linkPackages(parents, packs) {
       product_info: [],
     };
 
-    prod.variations.map(vary => {
-      if (undefined !== vary[f.package]) {
+    if (prod.variations) {
+      prod.variations.map(vary => {
+        if (undefined !== vary[f.package]) {
         // We have a variation wanting to be in a package
         //   see if that package exists first
-        if (!packages[vary[f.package]]) {
-          packages[vary[f.package]] = {
-            label: vary[f.package],
-            pic: prod[f.pic],
-            skus: [],
-            model: 'B',
-            product_info: [],
-          };
-          // if this is a 'list' package, ensure model A
-          if ('list' === vary[f.package]) {
-            packages[vary[f.package]].model = 'A';
-            packages[vary[f.package]].label = prod[f.name];
-            packages[vary[f.package]].product_info = ['description', 'image'];
+          if (!packages[vary[f.package]]) {
+            packages[vary[f.package]] = {
+              label: vary[f.package],
+              pic: prod[f.pic],
+              skus: [],
+              model: 'B',
+              product_info: [],
+            };
+            // if this is a 'list' package, ensure model A
+            if ('list' === vary[f.package]) {
+              packages[vary[f.package]].model = 'A';
+              packages[vary[f.package]].label = prod[f.name];
+              packages[vary[f.package]].product_info = ['description', 'image'];
+            }
           }
+          // Add variation to the package of its choice
+          packages[vary[f.package]].skus.push(vary.sku);
+        } else {
+          console.log(vary.sku);
+          packages.drop.skus.push(vary.sku);
         }
-        // Add variation to the package of its choice
-        packages[vary[f.package]].skus.push(vary.sku);
-      } else {
-        console.log(vary.sku);
-        packages.drop.skus.push(vary.sku);
-      }
-    });
+      });
+    }
 
     //   Remove default if every variation found a package
     if (0 === packages.drop.skus.length) {
