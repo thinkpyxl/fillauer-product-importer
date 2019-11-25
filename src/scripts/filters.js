@@ -109,29 +109,59 @@ function linkVariations(parents, varies) {
   return parents;
 }
 
-function linkPackages(parents, packages) {
-  const packedPackages = parents;
-  packages = buildPackageObj(packages);
+function linkPackages(parents, packs) {
+  packs = buildPackageObj(packs);
 
-  return packages;
-  Object.values(parents).map(val => {
-    val.variations.map(vary => {
-      if (undefined === vary[f.package]) {
-        if (undefined === packages.drop || 'drop' === vary[f.package]) {
-          packages.drop.label = 'drop';
-          packages.drop.model = 'B';
+  // Learn what you can from just variations
+  Object.values(parents).map(prod => {
+    const packages = [];
+
+    // Default package
+    packages.drop = {
+      label: prod[f.name],
+      skus: [],
+      model: 'B',
+      specs: [], // This needs to be pulled from varying attributes
+      product_info: [],
+    };
+
+    prod.variations.map(vary => {
+      if (undefined !== vary[f.package]) {
+        // We have a variation wanting to be in a package
+        //   see if that package exists first
+        if (!packages[vary[f.package]]) {
+          packages[vary[f.package]] = {
+            label: vary[f.package],
+            skus: [],
+            model: 'A',
+          };
+          // if this is a 'list' package, ensure model A
+          if ('list' === vary[f.package]) {
+            packages[vary[f.package]].model = 'A';
+            packages[vary[f.package]].label = prod[f.name];
+          }
         }
-      } else if ('list' === vary[f.package]) {
-        packages.list.label = 'list';
-        packages.list.model = 'A';
+        // Add variation to the package of its choice
+        packages[vary[f.package]].skus.push(vary.sku);
       } else {
-      // Look up in package information
-        packages[vary[f.package]].label = vary[f.package];
-        packages[vary[f.package]].model = 'A';
+        console.log(vary.sku);
+        packages.drop.skus.push(vary.sku);
       }
     });
+
+    if (0 === packages.drop.skus.length) {
+      //   Remove default if every variation found a package
+      delete packages.drop;
+    }
+
+    parents[prod[f.pic]].packages = packages;
   });
-  return packedPackages;
+
+  // Now apply the package file for more packages and specs
+
+
+
+  return parents;
 }
 
 // confirm definition of properties that will be used in POST

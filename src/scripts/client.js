@@ -33,6 +33,7 @@ function buildProductObjs(attrRow, rows, verbose = false) {
   const products = rows.splice(1).map(row => {
     const product = {};
     product.specs = {};
+    product.packages = [];
     row.map((val, ind) => {
       if ('' !== val) {
         // Specification or generic product information
@@ -97,6 +98,7 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations,
+          packages: val.packages,
           /* packages: [
             {
               label: 'Fitting Tools',
@@ -142,10 +144,10 @@ function processCSV(parentCSV, variationCSV, packageCSV) {
 
   const productsByPIC = keyByPIC(importedProducts);
 
-  const productsWithVaritions = linkVariations(productsByPIC, importedVariations);
+  const productsWithVariations = linkVariations(productsByPIC, importedVariations);
 
-  const products = linkPackages(productsWithVaritions, packageCSV);
-  console.log('assembled ', products);
+  const products = linkPackages(productsWithVariations, packageCSV);
+  console.log('packaged ', products);
 
   statusElm.textContent = `Products have been processed. ${
     Object.keys(products).length
