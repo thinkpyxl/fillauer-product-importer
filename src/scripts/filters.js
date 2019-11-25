@@ -87,10 +87,51 @@ function linkVariations(parents, varies) {
   return parents;
 }
 
+function linkPackages(parents, packages) {
+  const packedPackages = parents;
+
+  console.log(packages);
+  return packedPackages;
+//   Object.values(parents).map(val => {
+//     val.variations.map(vary => {
+//       if (undefined === vary[f.package]) {
+//         if (undefined === packages.drop || 'drop' === vary[f.package]) {
+//           packages.drop.label = 'drop';
+//           packages.drop.model = 'B';
+//         }
+//       } else if ('list' === vary[f.package]) {
+//         packages.list.label = 'list';
+//         packages.list.model = 'A';
+//       } else {
+//       // Look up in package information
+//         packages[vary[f.package]].label = vary[f.package];
+//         packages[vary[f.package]].model = 'A';
+//       }
+//     });
+//   });
+//   return packedPackages;
+}
+
 // confirm definition of properties that will be used in POST
 function verifyFields(prod) {
   // console.log(prod);
   return prod;
 }
 
-export { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, verifyFields };
+function verifyFiles(parentFileHandler, variationFileHandler, packageFileHandler) {
+  if (parentFileHandler === undefined) {
+    window.alert('Specify a parent product file first');
+    return false;
+  }
+  if (variationFileHandler === undefined) {
+    window.alert('Specify a variations file first');
+    return false;
+  }
+  if (packageFileHandler === undefined) {
+    window.alert('Specify a package file first');
+    return false;
+  }
+  return true;
+}
+
+export { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles };

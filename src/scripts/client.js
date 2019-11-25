@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import { f } from './fields.js';
-import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, verifyFields } from './filters.js';
+import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
 import { fetcher, deleteProducts, readFilePromise } from './utils.js';
 
 console.log('client-side script executed');
@@ -137,7 +137,7 @@ async function POSTproducts(prods, existingProducts) {
 // TODO: Finish
 // function findVariationSpecs(variations) {
 
-function processCSV(parentCSV, variationCSV) {
+function processCSV(parentCSV, variationCSV, packageCSV) {
   // The first row containing attribute names will CONSTantly be referenced
   const parentAttr = parentCSV[0];
   const variationAttr = variationCSV[0];
@@ -155,7 +155,9 @@ function processCSV(parentCSV, variationCSV) {
 
   const productsByPIC = keyByPIC(importedProducts);
 
-  const products = linkVariations(productsByPIC, importedVariations);
+  const productsWithVaritions = linkVariations(productsByPIC, importedVariations);
+
+  const products = linkPackages(productsWithVaritions, packageCSV);
   console.log('assembled ', products);
 
   statusElm.textContent = `Products have been processed. ${
@@ -171,6 +173,7 @@ async function init() {
   const createBtn = document.querySelector('#create_button');
   const parentFileInput = document.querySelector('#parent_file_input');
   const variationFileInput = document.querySelector('#variation_file_input');
+  const packageFileInput = document.querySelector('#package_file_input');
   const testBtn = document.querySelector('#test_button');
   let existingProducts = null;
   let newProducts = null;
@@ -227,13 +230,9 @@ async function init() {
     // props to https://javascript.info/file#filereader
     const parentFileHandler = parentFileInput.files[0];
     const variationFileHandler = variationFileInput.files[0];
+    const packageFileHandler = packageFileInput.files[0];
 
-    if (parentFileHandler === undefined) {
-      window.alert('Specify a parent product file first');
-      return false;
-    }
-    if (variationFileHandler === undefined) {
-      window.alert('Specify a variations file first');
+    if (!verifyFiles(parentFileHandler, variationFileHandler, packageFileHandler)) {
       return false;
     }
 
@@ -241,6 +240,7 @@ async function init() {
     const readPromises = [
       readFilePromise(parentFileHandler),
       readFilePromise(variationFileHandler),
+      readFilePromise(packageFileHandler),
     ];
 
     Promise.all(readPromises).then(CSVs => {

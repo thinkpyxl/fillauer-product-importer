@@ -11,6 +11,7 @@ const f = {
   desc: 'Description',
   short_desc: 'Short Description',
   visibility: 'Visibility in catalog',
+  package: 'Package',
 };
 
 export { f };

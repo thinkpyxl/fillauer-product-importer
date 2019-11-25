@@ -12,6 +12,9 @@
       <label for='variation_file'>Variation Products</label>
       <input id='variation_file_input' type='file' name='variation_file'>
       <br>
+      <label for='package_file'>Package Information</label>
+      <input id='package_file_input' type='file' name='package_file'>
+      <br>
       <input id='import_button' type='button' name='import_button' value='Import'>
       <input id='create_button' type='button' name='create_button' value='Create Products'>
 </form>
