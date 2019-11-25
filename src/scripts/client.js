@@ -77,7 +77,7 @@ async function POSTproducts(prods, existingProducts) {
 
   Object.values(prods)
     .map(val => {
-      verifyFields(val);
+      val = verifyFields(val);
       fetcher(`${wpApiSettings.root}wp/v2/product`, {
         method: 'post',
         headers: {
@@ -89,10 +89,7 @@ async function POSTproducts(prods, existingProducts) {
           content: val[f.desc],
           excerpt: val[f.short_desc],
           status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
-          terms: {
-            product_cat: [val[f.cat]],
-            product_tag: val[f.tag].split(','),
-          },
+          terms: val.terms,
           meta: {
             SKU: val[f.sku],
             PIC: val[f.pic],

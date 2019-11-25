@@ -70,6 +70,28 @@ function keyByPIC(prods) {
   return ProdByPIC;
 }
 
+function buildPackageObj(packages) {
+  const rv = {};
+  const attr = packages[0].splice(1);
+  // Ignore ID field since the rows are spliced too
+
+  packages.splice(1).map(row => {
+    const id = row[0];
+    if (undefined !== rv[id]) {
+      window.alert(`Conflicting package ID's found: ${id}`);
+    }
+    rv[id] = {};
+    row.splice(1).map((val, ind) => {
+      rv[id][attr[ind]] = val;
+    });
+    rv[id].Attributes = rv[id].Attributes.split(',').map(val => {
+      return val.trim();
+    });
+  });
+  console.log(rv);
+  return rv;
+}
+
 function linkVariations(parents, varies) {
   varies.map(val => {
     if (undefined === parents[val[f.pic]]) return false;
@@ -89,32 +111,42 @@ function linkVariations(parents, varies) {
 
 function linkPackages(parents, packages) {
   const packedPackages = parents;
+  packages = buildPackageObj(packages);
 
-  console.log(packages);
+  return packages;
+  Object.values(parents).map(val => {
+    val.variations.map(vary => {
+      if (undefined === vary[f.package]) {
+        if (undefined === packages.drop || 'drop' === vary[f.package]) {
+          packages.drop.label = 'drop';
+          packages.drop.model = 'B';
+        }
+      } else if ('list' === vary[f.package]) {
+        packages.list.label = 'list';
+        packages.list.model = 'A';
+      } else {
+      // Look up in package information
+        packages[vary[f.package]].label = vary[f.package];
+        packages[vary[f.package]].model = 'A';
+      }
+    });
+  });
   return packedPackages;
-//   Object.values(parents).map(val => {
-//     val.variations.map(vary => {
-//       if (undefined === vary[f.package]) {
-//         if (undefined === packages.drop || 'drop' === vary[f.package]) {
-//           packages.drop.label = 'drop';
-//           packages.drop.model = 'B';
-//         }
-//       } else if ('list' === vary[f.package]) {
-//         packages.list.label = 'list';
-//         packages.list.model = 'A';
-//       } else {
-//       // Look up in package information
-//         packages[vary[f.package]].label = vary[f.package];
-//         packages[vary[f.package]].model = 'A';
-//       }
-//     });
-//   });
-//   return packedPackages;
 }
 
 // confirm definition of properties that will be used in POST
 function verifyFields(prod) {
   // console.log(prod);
+  prod.terms = {};
+  if (prod[f.cat] !== undefined) {
+    prod.terms.product_cat = [prod[f.cat]];
+  }
+  if (prod[f.tax] !== undefined) {
+    prod.terms.product_tax = [prod[f.tax]].split(',').map(val => {
+      return val.trim();
+    });
+  }
+
   return prod;
 }
 
