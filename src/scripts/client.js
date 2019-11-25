@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import { f } from './fields.js';
-import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
+import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
 import { fetcher, deleteProducts, readFilePromise } from './utils.js';
 
 console.log('client-side script executed');
@@ -36,21 +36,11 @@ function buildProductObjs(attrRow, rows, verbose = false) {
     row.map((val, ind) => {
       if ('' !== val) {
         // Specification or generic product information
-        if (start < ind && ind < end) {
-          product.specs[attrRow[ind]] = [];
-          // Value
-          product.specs[attrRow[ind]].push(val);
-
-          // Icon
-          product.specs[attrRow[ind]].push(icons[attrRow[ind]]);
-
-          // Featured or Additional
-          // if (val.include('*')) {
-          //   product.specs[attrRow[ind]].push(true);
-          // } else {
-          //   product.specs[attrRow[ind]].push(false);
-          // }
+        const spec = buildSpec(start, end, ind, val, attrRow[ind], icons[attrRow[ind]]);
+        if (spec) {
+          product.specs[attrRow[ind]] = spec;
         } else {
+          // Generic product info
           product[attrRow[ind]] = val;
         }
       }

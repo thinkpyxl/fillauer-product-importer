@@ -55,13 +55,16 @@ add_action(
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
 					// error_log( 'specs ' . print_r( $value, true ) );
-					foreach ( $value as $key => $value ) {
+					foreach ( $value as $key => $val ) {
 
+						// error_log( 'specs key' . print_r( $key, true ) );
+						// error_log( 'specs val' . print_r( $val, true ) );
+						
 						$group[] = [
 							'spec_label' => $key,
-							'spec_value' => $value[0],
-							'logo'       => $value[1],
-							// 'featured'   => $value[2],
+							'spec_value' => $val['val'],
+							'logo'       => $val['icon'],
+							'featured'   => $val['featured'],
 						];
 						update_field( 'specifications', $group, $prod->ID );
 					}
@@ -128,8 +131,8 @@ add_action(
 								[ 'variations', $variation_index, 'variation_specs' ],
 								[
 									'spec_label' => $label,
-									'spec_value' => $val[0],
-									// 'spec_icon'  => $val[1]   // Not used unless varying specs use an icon
+									'spec_value' => $val['val'],
+									// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
 								],
 								$prod->ID
 							);

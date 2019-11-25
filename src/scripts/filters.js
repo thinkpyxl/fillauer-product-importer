@@ -134,4 +134,27 @@ function verifyFiles(parentFileHandler, variationFileHandler, packageFileHandler
   return true;
 }
 
-export { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles };
+function buildSpec(start, end, ind, val, attrRow, icon) {
+  if (start < ind && ind < end) {
+    const spec = {};
+
+    // Value
+    spec.val = val;
+
+    // Icon
+    spec.icon = icon;
+
+    // Featured or Additional
+    if (val.includes('*')) {
+      spec.val = val.replace('*', '');
+      spec.featured = true;
+    } else {
+      spec.featured = false;
+    }
+    return spec;
+  }
+
+  return false;
+}
+
+export { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec };
