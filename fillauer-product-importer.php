@@ -150,12 +150,9 @@ add_action(
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
 
-					error_log( 'taxes array ' . print_r( $value, true ) );
 					foreach ( $value as $key => $value ) {
-						error_log( 'taxes key ' . print_r( $key, true ) );
-						error_log( 'taxes value ' . print_r( $value[0], true ) );
 						if( taxonomy_exists($key) ){
-							error_log(print_r(wp_set_post_terms($prod->ID, $value[0], $key), true ) );
+							wp_set_object_terms($prod->ID, $value, $key);
 						}
 					}
 					return true;

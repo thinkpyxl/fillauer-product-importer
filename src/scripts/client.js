@@ -36,7 +36,7 @@ function buildProductObjs(attrRow, rows, verbose = false) {
     row.map((val, ind) => {
       if ('' !== val) {
         // Specification or generic product information
-        const spec = buildSpec(start, end, ind, val, attrRow[ind], icons[attrRow[ind]]);
+        const spec = buildSpec(start, end, ind, val, icons[attrRow[ind]]);
         if (spec) {
           product.specs[attrRow[ind]] = spec;
         } else {
@@ -89,9 +89,9 @@ async function POSTproducts(prods, existingProducts) {
           content: val[f.desc],
           excerpt: val[f.short_desc],
           status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
-          terms: { // TODO: endpoint for taxonomies
+          terms: {
             product_cat: [val[f.cat]],
-            product_tag: [val[f.tag]],
+            product_tag: val[f.tag].split(','),
           },
           meta: {
             SKU: val[f.sku],
@@ -123,8 +123,8 @@ async function POSTproducts(prods, existingProducts) {
     });
 }
 
-// Find the specs that vary across variations
-// TODO: Finish
+//
+// TODO: Find the specs that vary across variations; Product Number Generator
 // function findVariationSpecs(variations) {
 
 function processCSV(parentCSV, variationCSV, packageCSV) {

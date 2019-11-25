@@ -134,7 +134,7 @@ function verifyFiles(parentFileHandler, variationFileHandler, packageFileHandler
   return true;
 }
 
-function buildSpec(start, end, ind, val, attrRow, icon) {
+function buildSpec(start, end, ind, val, icon) {
   if (start < ind && ind < end) {
     const spec = {};
 
