@@ -98,7 +98,7 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations,
-          packages: val.packages,
+          packages: Objects.values(val.packages), // Keys only used for construction
           /* packages: [
             {
               label: 'Fitting Tools',

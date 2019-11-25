@@ -12,6 +12,11 @@ const f = {
   short_desc: 'Short Description',
   visibility: 'Visibility in catalog',
   package: 'Package',
+  title: 'Title', // Used in packages
+  attr: 'Attributes',
+  model: 'Model',
+  skus: 'SKUs',
+  prod_info: 'Product Info',
 };
 
 export { f };
