@@ -75,35 +75,60 @@ add_action(
 		);
 		register_rest_field(
 			'product',
-			'accessories',
+			'packages',
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
 
-					// TODO: Support for multiple accessory groups
+					$package_index = 1;
 					foreach ( $value as $key => $value ) {
-						// error_log( 'accessories ' . print_r( $value, true ) );
-						// Create Accessory group
+						error_log( 'package key ' . print_r( $key, true ) );
+						error_log( 'package value ' . print_r( $value, true ) );
+						// Read product_info to find which fields to toggle
+						$descOn = false;
+						$featsOn = false;
+						$imageOn = false;
+						foreach ( $value['product_info'] as $val ) {
+							switch($val){
+								case 'description': 
+									$descOn = true;
+								break;
+								case 'features': 
+									$featsOn = true;
+								break;
+								case 'image': 
+									$imageOn = true;
+								break;
+							}	
+						}
+						// Create Package
 						$group[] = [
-							'group_label' => $key,
+							'title'                    => $value['label'],
+							'package_pic'              => $value['pic'], 
+							'model'                    => $value['model'], 
+							'product_info_description' => $descOn,
+							'product_info_features'    => $featsOn,
+							'product_info_image'       => $imageOn,
 						];
-						update_field( 'accessory_groups', $group, $prod->ID );
+						update_field( 'packages', $group, $prod->ID );
 
 						// Add SKUs
 						foreach ( $value['skus'] as $val ) {
 							add_sub_row(
-								[ 'accessory_groups', 1, 'skus' ],
+								[ 'packages', $package_index, 'skus' ],
 								[ 'sku' => $val ],
 								$prod->ID
 							);
 						}
+
 						// Add Headers (for model B accessory tables)
-						foreach ( $value['headers'] as $val ) {
+						foreach ( $value['specs'] as $val ) {
 							add_sub_row(
-								[ 'accessory_groups', 1, 'headers' ],
+								[ 'packages', $package_index, 'headers' ],
 								[ 'header' => $val ],
 								$prod->ID
 							);
 						}
+						$package_index += 1;
 					}
 					return true;
 				},

@@ -70,6 +70,16 @@ function keyByPIC(prods) {
   return ProdByPIC;
 }
 
+function splitAndVerify(commaSeperated) {
+  const rv = commaSeperated.split(',').map(val => {
+    return val.trim();
+  });
+  if ('' === rv[0]) {
+    return false;
+  }
+  return rv;
+}
+
 function buildPackageObj(packages) {
   const rv = {};
   const attr = packages[0].splice(1);
@@ -84,12 +94,8 @@ function buildPackageObj(packages) {
     row.splice(1).map((val, ind) => {
       rv[id][attr[ind]] = val;
     });
-    rv[id][f.attr] = rv[id][f.attr].split(',').map(val => {
-      return val.trim();
-    });
-    if ('' === rv[id][f.attr][0]) {
-      delete rv[id][f.attr];
-    }
+    rv[id][f.attr] = splitAndVerify(rv[id][f.attr]);
+    rv[id][f.skus] = splitAndVerify(rv[id][f.skus]);
   });
   console.log(rv);
   return rv;
@@ -123,6 +129,7 @@ function linkPackages(parents, packs) {
     // Default package
     packages.drop = {
       label: prod[f.name],
+      pic: prod[f.pic],
       skus: [],
       model: 'B',
       specs: [], // This needs to be pulled from varying attributes
@@ -136,6 +143,7 @@ function linkPackages(parents, packs) {
         if (!packages[vary[f.package]]) {
           packages[vary[f.package]] = {
             label: vary[f.package],
+            pic: prod[f.pic],
             skus: [],
             model: 'B',
             product_info: [],
@@ -168,12 +176,19 @@ function linkPackages(parents, packs) {
         id = id.trim();
         packages['custom' + id] = {
           label: '',
+          pic: '',
           skus: [],
           model: 'B',
           specs: [], // This needs to be pulled from varying attributes
           product_info: [],
         };
-        // For every field that is defined by the package sheet, specify.
+        // For every field that is defined by the package sheet, confirm and re-specify.
+        if (packs[id][f.pic]) {
+          packages['custom' + id].pic = packs[id][f.pic];
+        }
+        if (packs[id][f.skus]) {
+          packages['custom' + id].skus = packs[id][f.skus];
+        }
         if (packs[id][f.attr]) {
           console.log(packs[id][f.attr]);
           packages['custom' + id].specs = packs[id][f.attr];
@@ -182,7 +197,7 @@ function linkPackages(parents, packs) {
           packages['custom' + id].label = packs[id][f.title];
         } else {
           // If the title is not specified, this is a product blurb and the title and product_info should be pulled from the PIC.
-          packages['custom' + id].product_info = ['description', 'info'];
+          packages['custom' + id].product_info = ['description', 'image'];
         }
         if (packs[id][f.model]) {
           packages['custom' + id].model = packs[id][f.model];
