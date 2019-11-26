@@ -17,6 +17,8 @@ const f = {
   model: 'Model',
   skus: 'SKUs',
   prod_info: 'Product Info',
+  image: 'Image',
+  indent: 'Indention',
 };
 
 export { f };

@@ -87,6 +87,10 @@ add_action(
 						$descOn = false;
 						$featsOn = false;
 						$imageOn = false;
+						$table_image = false;
+						if( key_exists( 'image', $value )){
+							$table_image = $value['image'];
+						}
 						foreach ( $value['product_info'] as $val ) {
 							switch($val){
 								case 'description': 
@@ -108,6 +112,7 @@ add_action(
 							'product_info_description' => $descOn,
 							'product_info_features'    => $featsOn,
 							'product_info_image'       => $imageOn,
+							'table_image'              => $table_image,
 						];
 						update_field( 'packages', $group, $prod->ID );
 
@@ -147,6 +152,7 @@ add_action(
 						$group[] = [
 							'variation_sku'  => $value['sku'],
 							'variation_name' => $value['name'],
+							'variation_image' => $value['image'],
 						];
 						update_field( 'variations', $group, $prod->ID );
 

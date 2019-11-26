@@ -111,6 +111,7 @@ function linkVariations(parents, varies) {
     parents[val[f.pic]].variations.push({
       name: val[f.name],
       sku: val[f.sku],
+      image: val[f.image] ? val[f.image] : false,
       specs: val.specs,
     });
   });
@@ -141,6 +142,7 @@ function linkPackages(parents, packs) {
         if (undefined !== vary[f.package]) {
         // We have a variation wanting to be in a package
         //   see if that package exists first
+        // TODO: BUG: ProCover tools aren't separating here
           if (!packages[vary[f.package]]) {
             packages[vary[f.package]] = {
               label: vary[f.package],
@@ -153,6 +155,12 @@ function linkPackages(parents, packs) {
             if ('list' === vary[f.package]) {
               packages[vary[f.package]].model = 'A';
               packages[vary[f.package]].label = prod[f.name];
+              packages[vary[f.package]].product_info = ['description', 'image'];
+            }
+            if (vary[f.image]) {
+              packages[vary[f.package]].model = 'C';
+              //   Make sure they're separate from the 'drop' first
+              packages[vary[f.package]].label = vary[f.package] ? vary[f.package] : prod[f.name];
               packages[vary[f.package]].product_info = ['description', 'image'];
             }
           }
@@ -185,6 +193,11 @@ function linkPackages(parents, packs) {
           product_info: [],
         };
         // For every field that is defined by the package sheet, confirm and re-specify.
+        if (packs[id][f.image]) {
+          console.log('image found');
+          packages['custom' + id].model = 'D';
+          packages['custom' + id].image = packs[id][f.image];
+        }
         if (packs[id][f.pic]) {
           packages['custom' + id].pic = packs[id][f.pic];
         }
