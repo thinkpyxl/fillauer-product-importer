@@ -3,6 +3,7 @@
 import { f } from './fields.js';
 import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
 import { fetcher, deleteProducts, readFilePromise } from './utils.js';
+import hash from 'object-hash';
 
 console.log('client-side script executed');
 
@@ -99,6 +100,7 @@ async function POSTproducts(prods, existingProducts) {
           specs: val.specs,
           variations: val.variations,
           packages: Object.values(val.packages), // Keys only used for construction
+          checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
             {
               label: 'Fitting Tools',
