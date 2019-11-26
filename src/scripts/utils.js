@@ -7,7 +7,7 @@ function fetcher(url, obj) {
     .then(res => {
       return res.json();
     })
-    .catch(console.error);
+    .catch(err => console.error(err, obj));
 }
 
 async function readFilePromise(fileHandler) {

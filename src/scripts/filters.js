@@ -113,6 +113,7 @@ function linkVariations(parents, varies) {
       sku: val[f.sku],
       image: val[f.image] ? val[f.image] : false,
       specs: val.specs,
+      package: val[f.package],
     });
   });
 
@@ -139,35 +140,35 @@ function linkPackages(parents, packs) {
 
     if (prod.variations) {
       prod.variations.map(vary => {
-        if (undefined !== vary[f.package]) {
+        if (undefined !== vary.package) {
         // We have a variation wanting to be in a package
         //   see if that package exists first
         // TODO: BUG: ProCover tools aren't separating here
-          if (!packages[vary[f.package]]) {
-            packages[vary[f.package]] = {
-              label: vary[f.package],
+          if (!packages[vary.package]) {
+            packages[vary.package] = {
+              label: vary.package,
               pic: prod[f.pic],
               skus: [],
               model: 'B',
               product_info: [],
             };
             // if this is a 'list' package, ensure model A
-            if ('list' === vary[f.package]) {
-              packages[vary[f.package]].model = 'A';
-              packages[vary[f.package]].label = prod[f.name];
-              packages[vary[f.package]].product_info = ['description', 'image'];
+            if ('list' === vary.package) {
+              packages[vary.package].model = 'A';
+              packages[vary.package].label = prod[f.name];
+              packages[vary.package].product_info = ['description', 'image'];
             }
-            if (vary[f.image]) {
-              packages[vary[f.package]].model = 'C';
+            if (vary.image) {
+              packages[vary.package].model = 'C';
               //   Make sure they're separate from the 'drop' first
-              packages[vary[f.package]].label = vary[f.package] ? vary[f.package] : prod[f.name];
-              packages[vary[f.package]].product_info = ['description', 'image'];
+              packages[vary.package].label = vary.package ? vary.package : prod[f.name];
+              packages[vary.package].product_info = ['description', 'image'];
             }
           }
           // Add variation to the package of its choice
-          packages[vary[f.package]].skus.push(vary.sku);
+          console.log(prod[f.name], vary.package);
+          packages[vary.package].skus.push(vary.sku);
         } else {
-          console.log(vary.sku);
           packages.drop.skus.push(vary.sku);
         }
       });
@@ -227,8 +228,8 @@ function linkPackages(parents, packs) {
 }
 
 // confirm definition of properties that will be used in POST
+//    used for cleaning taxonomies for now
 function verifyFields(prod) {
-  // console.log(prod);
   prod.terms = {};
   if (prod[f.cat] !== undefined) {
     prod.terms.product_cat = [prod[f.cat]];
