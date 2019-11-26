@@ -93,14 +93,14 @@ async function POSTproducts(prods, existingProducts) {
           status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
           terms: val.terms,
           meta: {
-            SKU: val[f.sku],
+            SKU: 'simple' === val[f.type] ? val[f.sku] : '',
             PIC: val[f.pic],
             product_type: val[f.type],
           },
           specs: val.specs,
           variations: val.variations,
-          packages: Object.values(val.packages), // Keys only used for construction
-          checksum: hash(val), // Used for finding changes between new imports and wp posts
+          // packages: Object.values(val.packages), // Keys only used for construction
+          // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
             {
               label: 'Fitting Tools',

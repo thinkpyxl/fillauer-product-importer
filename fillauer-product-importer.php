@@ -81,8 +81,8 @@ add_action(
 
 					$package_index = 1;
 					foreach ( $value as $key => $value ) {
-						error_log( 'package key ' . print_r( $key, true ) );
-						error_log( 'package value ' . print_r( $value, true ) );
+						// error_log( 'package key ' . print_r( $key, true ) );
+						// error_log( 'package value ' . print_r( $value, true ) );
 						// Read product_info to find which fields to toggle
 						$descOn = false;
 						$featsOn = false;
@@ -93,6 +93,9 @@ add_action(
 						}
 						foreach ( $value['product_info'] as $val ) {
 							switch($val){
+								case 'name': 
+									$descOn = true;
+								break;
 								case 'description': 
 									$descOn = true;
 								break;
@@ -109,6 +112,7 @@ add_action(
 							'title'                    => $value['label'],
 							'package_pic'              => $value['pic'], 
 							'model'                    => $value['model'], 
+							'product_info_name'        => $descOn,
 							'product_info_description' => $descOn,
 							'product_info_features'    => $featsOn,
 							'product_info_image'       => $imageOn,
@@ -182,6 +186,8 @@ add_action(
 				'update_callback' => function( $value, $prod, $field_name ) {
 
 					foreach ( $value as $key => $value ) {
+						error_log( 'term key' . print_r( $key, true ) );
+						error_log( 'term val' . print_r( $value, true ) );
 						if( taxonomy_exists($key) ){
 							wp_set_object_terms($prod->ID, $value, $key);
 						}

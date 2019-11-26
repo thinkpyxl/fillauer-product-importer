@@ -130,10 +130,10 @@ function linkPackages(parents, packs) {
 
     // Default package
     packages.drop = {
-      label: prod[f.name],
+      label: '', //! This should pull from PIC by controller
       pic: prod[f.pic],
-      skus: [],
       model: 'B',
+      skus: [],
       specs: [], // This needs to be pulled from varying attributes
       product_info: [],
     };
@@ -141,33 +141,48 @@ function linkPackages(parents, packs) {
     if (prod.variations) {
       prod.variations.map(vary => {
         if (undefined !== vary.package) {
-        // We have a variation wanting to be in a package
-        //   see if that package exists first
-        // TODO: BUG: ProCover tools aren't separating here
+          // Variation specifies a package to be in
+          //   see if that package exists first
           if (!packages[vary.package]) {
-            packages[vary.package] = {
+            packages[vary.package] = { // Base package template
               label: vary.package,
               pic: prod[f.pic],
-              skus: [],
               model: 'B',
-              product_info: [],
+              skus: [],
+              specs: [], // Defined by pack sheet below
+              product_info: [], // Defined by pack sheet below
             };
             // if this is a 'list' package, ensure model A
             if ('list' === vary.package) {
               packages[vary.package].model = 'A';
-              packages[vary.package].label = prod[f.name];
-              packages[vary.package].product_info = ['description', 'image'];
+              packages[vary.package].label = ''; //! PIC's name if on another product
+              packages[vary.package].product_info = ['name', 'description', 'image'];
             }
-            if (vary.image) {
-              packages[vary.package].model = 'C';
-              //   Make sure they're separate from the 'drop' first
-              packages[vary.package].label = vary.package ? vary.package : prod[f.name];
-              packages[vary.package].product_info = ['description', 'image'];
-            }
+          }
+          // If any of the variations have images, upgrade that package model.
+          if (vary.image) {
+            packages[vary.package].model = 'C';
+            //   Make sure they're separate from the 'drop' first
+            // Any other details should be defined by pack sheet
           }
           // Add variation to the package of its choice
           console.log(prod[f.name], vary.package);
           packages[vary.package].skus.push(vary.sku);
+
+        // If a package name isn't specified but the variation still uses an image, use a blank package name, similar to 'drop'
+        } else if (vary.image) {
+          // Check if there already isn't a package for unlabeled packages of variation images.
+          if (!packages.varyImage) {
+            packages.varyImage = {
+              label: '',
+              pic: prod[f.pic],
+              skus: [],
+              specs: [],
+              model: 'C',
+              product_info: ['name', 'description', 'image'],
+            };
+          }
+          packages.varyImage.skus.push(vary.sku);
         } else {
           packages.drop.skus.push(vary.sku);
         }
@@ -179,20 +194,29 @@ function linkPackages(parents, packs) {
       delete packages.drop;
     }
 
+    // TODO Deleting anyways to find solution for data overflow
+    delete packages.drop;
+
     // Now apply the package file for more packages and specs
     // All packages must have names by now, otherwise the variations wouldn't be able to save or they would be put in 'drop'
     if (prod[f.package]) {
       prod[f.package].split(',').map(id => {
         // This is a package who's name derives from PIC
         id = id.trim();
-        packages['custom' + id] = {
-          label: '',
-          pic: '',
-          skus: [],
-          model: 'B',
-          specs: [], // This needs to be pulled from varying attributes
-          product_info: [],
-        };
+        // Before making custom package, make sure the variations didn't already define it.
+        if (packages[packs[id][f.title]]) {
+          packages['custom' + id] = packages[packs[id][f.title]];
+          delete packages[packs[id][f.title]];
+        } else /* Otherwise, build the new package */ {
+          packages['custom' + id] = {
+            label: '',
+            pic: '',
+            skus: [],
+            model: 'B',
+            specs: [], // This needs to be pulled from varying attributes
+            product_info: [],
+          };
+        }
         // For every field that is defined by the package sheet, confirm and re-specify.
         if (packs[id][f.image]) {
           console.log('image found');
@@ -203,7 +227,8 @@ function linkPackages(parents, packs) {
           packages['custom' + id].pic = packs[id][f.pic];
         }
         if (packs[id][f.skus]) {
-          packages['custom' + id].skus = packs[id][f.skus];
+          // ? Is this merging properly?
+          packages['custom' + id].skus.push(...packs[id][f.skus]);
         }
         if (packs[id][f.attr]) {
           console.log(packs[id][f.attr]);
@@ -213,7 +238,7 @@ function linkPackages(parents, packs) {
           packages['custom' + id].label = packs[id][f.title];
         } else {
           // If the title is not specified, this is a product blurb and the title and product_info should be pulled from the PIC.
-          packages['custom' + id].product_info = ['description', 'image'];
+          packages['custom' + id].product_info = ['name', 'description', 'image'];
         }
         if (packs[id][f.model]) {
           packages['custom' + id].model = packs[id][f.model];
