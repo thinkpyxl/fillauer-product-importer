@@ -99,7 +99,7 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations,
-          // packages: Object.values(val.packages), // Keys only used for construction
+          packages: Object.values(val.packages), // Keys only used for construction
           // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
             {
