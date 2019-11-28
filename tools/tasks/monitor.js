@@ -21,6 +21,7 @@ function monitor(cb) {
     ],
     series(
       scripts,
+      globalStyles,
       reload,
     ),
   );

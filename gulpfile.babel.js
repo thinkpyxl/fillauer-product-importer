@@ -1,5 +1,5 @@
 import { series, parallel } from 'gulp';
-import { scripts, clean, monitor, vendors } from './tools/index';
+import { scripts, globalStyles, clean, monitor, vendors } from './tools/index';
 import { serve } from './tools/tasks/serve';
 
 const start = series(
@@ -12,6 +12,7 @@ const start = series(
 const build = series(
   clean,
   series(
+    globalStyles,
     scripts,
     vendors,
   ),
@@ -20,6 +21,7 @@ const build = series(
 const prod = series(
   clean,
   parallel(
+    globalStyles,
     scripts,
     vendors,
   ),
