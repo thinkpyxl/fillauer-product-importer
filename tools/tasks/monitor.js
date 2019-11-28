@@ -17,6 +17,7 @@ function monitor(cb) {
   watch(
     [
       'src/**/*.js',
+      'src/**/*.scss',
       'views/**/*.js',
     ],
     series(
