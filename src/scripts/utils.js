@@ -55,4 +55,25 @@ function deleteProducts(prods) {
   });
 }
 
-export { fetcher, deleteProducts, readFilePromise };
+function testCall(ev) {
+  ev.preventDefault();
+  // Lance magic
+  fetch(`${wpApiSettings.root}wp/v2`, {
+    method: 'get',
+    headers: {
+      'X-WP-Nonce': wpApiSettings.nonce,
+      'Content-Type': 'application/json',
+    },
+    // body: JSON.stringify({
+    //   title: 'Hello Moon',
+    //   content: '',
+    //   excerpt: '',
+    //   status: 'publish',
+    //   meta: { sku: 'asdf', product_type: 'simple', pic: '12452364' },
+    // }),
+  })
+    .then(response => response.json().then(console.log))
+    .catch(console.log);
+}
+
+export { fetcher, deleteProducts, readFilePromise, testCall };
