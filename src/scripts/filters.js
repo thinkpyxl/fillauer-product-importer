@@ -71,6 +71,7 @@ function keyByPIC(prods) {
 }
 
 function splitAndVerify(commaSeperated) {
+  if (!commaSeperated) return [];
   const rv = commaSeperated.split(',').map(val => {
     return val.trim();
   });
@@ -193,9 +194,6 @@ function linkPackages(parents, packs) {
     if (0 === packages.drop.skus.length) {
       delete packages.drop;
     }
-
-    // TODO Deleting anyways to find solution for data overflow
-    delete packages.drop;
 
     // Now apply the package file for more packages and specs
     // All packages must have names by now, otherwise the variations wouldn't be able to save or they would be put in 'drop'
