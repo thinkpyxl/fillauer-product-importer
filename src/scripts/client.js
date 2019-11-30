@@ -2,7 +2,7 @@
 /* eslint-disable no-undef */
 import { f } from './fields.js';
 import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
-import { fetcher, deleteProducts, readFilePromise } from './utils.js';
+import { fetcher, deleteProducts, readFilePromise, testCall } from './utils.js';
 import hash from 'object-hash';
 
 console.log('client-side script executed');
@@ -59,6 +59,25 @@ function buildProductObjs(attrRow, rows, verbose = false) {
   return products.filter(prod => prod !== undefined);
 }
 
+async function POSTvariations(POSTid, varies, depth = 1) {
+  console.log(`Posting more variations at a depth of ${depth}`);
+  await fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
+    method: 'post',
+    headers: {
+      'X-WP-Nonce': wpApiSettings.nonce,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      variations: varies.splice(0, 24), // The best value for preventing large variation POST crashes
+    }),
+
+  }).then(res => {
+    if (res && 0 !== varies.length && 20 > depth) {
+      return POSTvariations(POSTid, varies, depth + 1);
+    }
+  });
+}
+
 async function POSTproducts(prods, existingProducts) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length;
@@ -98,7 +117,7 @@ async function POSTproducts(prods, existingProducts) {
             product_type: val[f.type],
           },
           specs: val.specs,
-          variations: val.variations,
+          variations: val.variations ? val.variations.splice(0, 40) : [],
           packages: Object.values(val.packages), // Keys only used for construction
           // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
@@ -118,7 +137,17 @@ async function POSTproducts(prods, existingProducts) {
       })
         .then(res => {
           console.log(res);
-          statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+          // Confirm that the POST was ok before adding variations
+          if (undefined !== res &&
+              val.variations &&
+              0 !== val.variations.length
+          ) {
+            POSTvariations(res.id, val.variations, 1).then(() => {
+              statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+            });
+          } else {
+            statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
+          }
         })
         .catch(console.error);
     });
@@ -188,26 +217,7 @@ async function init() {
 
   //* //////////////////////////////////////////////////////////////////////
   //    Test POST Call
-  testBtn.addEventListener('mouseup', ev => {
-    ev.preventDefault();
-    // Lance magic
-    fetch(`${wpApiSettings.root}wp/v2/product`, {
-      method: 'post',
-      headers: {
-        'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'Hello Moon',
-        content: '',
-        excerpt: '',
-        status: 'publish',
-        meta: { sku: 'asdf', product_type: 'simple', pic: '12452364' },
-      }),
-    })
-      .then(response => response.json().then(console.log))
-      .catch(console.log);
-  });
+  testBtn.addEventListener('mouseup', testCall);
 
   //* //////////////////////////////////////////////////////////////////////
   //    IMPORT EVENT

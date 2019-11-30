@@ -13,6 +13,7 @@ function importer_menu() {
 
 function register_processor() {
 	wp_register_script( 'product-import-processor', plugins_url( 'dist/scripts/client.js', __FILE__ ), '1.0.0', true );
+	wp_register_style( 'product-import-styles', plugins_url( 'dist/styles/global.css', __FILE__ ), '1.0.0', true );
 
 	// Pass nounce for WP API Authentication
 	wp_localize_script(
@@ -24,6 +25,7 @@ function register_processor() {
 		]
 	);
 	wp_enqueue_script( 'product-import-processor' );
+	wp_enqueue_style( 'product-import-styles');
 }
 
 // TODO: endpoint for taxonomies
@@ -40,7 +42,7 @@ add_action(
 					return $listing_obj;
 				},
 				'update_callback' => function( $value, $listing_obj, $field_name ) {
-					// error_log('meta '.print_r($value, TRUE));
+					error_log('Receiving product: '.print_r($value['PIC'], TRUE));
 					foreach ( $value as $key => $value ) {
 						update_post_meta( $listing_obj->ID, $key, $value );
 					}
@@ -79,6 +81,7 @@ add_action(
 			[
 				'update_callback' => function( $value, $prod, $field_name ) {
 
+					// error_log( 'package ' . print_r( $value, true ) );
 					$package_index = 1;
 					foreach ( $value as $key => $value ) {
 						// error_log( 'package key ' . print_r( $key, true ) );
@@ -151,14 +154,17 @@ add_action(
 				'update_callback' => function( $value, $prod, $field_name ) {
 
 					$variation_index = 1;
+					
 					foreach ( $value as $key => $value ) {
 						// Create Variation
-						$group[] = [
+						
+						// error_log(print_r('Variation group: '.$variation_index,true));
+						$group = array(
 							'variation_sku'  => $value['sku'],
 							'variation_name' => $value['name'],
 							'variation_image' => $value['image'],
-						];
-						update_field( 'variations', $group, $prod->ID );
+						);
+						$variation_index = add_row( 'variations', $group, $prod->ID );
 
 						// Add Specifications for each variation entry
 						foreach ( $value['specs'] as $label => $val ) {
@@ -186,8 +192,8 @@ add_action(
 				'update_callback' => function( $value, $prod, $field_name ) {
 
 					foreach ( $value as $key => $value ) {
-						error_log( 'term key' . print_r( $key, true ) );
-						error_log( 'term val' . print_r( $value, true ) );
+						// error_log( 'term key' . print_r( $key, true ) );
+						// error_log( 'term val' . print_r( $value, true ) );
 						if( taxonomy_exists($key) ){
 							wp_set_object_terms($prod->ID, $value, $key);
 						}
