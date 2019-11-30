@@ -19,6 +19,8 @@ const f = {
   prod_info: 'Product Info',
   image: 'Image',
   indent: 'Indention',
+  warrantyList: 'Warranty List',
+  warrantyBody: 'Warranty Body',
 };
 
 export { f };

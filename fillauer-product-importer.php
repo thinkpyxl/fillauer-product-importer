@@ -59,6 +59,12 @@ function update_variations( $value, $prod, $field_name ){
 	return true;
 };
 
+function update_warranty( $value, $prod, $field_name ) {
+	update_field('warranty_body', $value['body'], $prod->ID);
+	foreach( $value['list'] as $item ){ 
+		add_row('warranty_list', ['warranty_item' => $item], $prod->ID );
+	}
+}
 function update_specs( $value, $prod, $field_name ) {
 	// error_log( 'specs ' . print_r( $value, true ) );
 	foreach ( $value as $key => $val ) {
@@ -200,6 +206,14 @@ add_action(
 			'variations',
 			[
 				'update_callback' => 'update_variations',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'warranty',
+			[
+				'update_callback' => 'update_warranty',
 				'schema'          => null,
 			]
 		);

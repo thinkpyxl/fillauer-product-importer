@@ -35,7 +35,9 @@ function buildProductObjs(attrRow, rows) {
     const product = {};
     product.specs = {};
     product.terms = {};
+    product.warranty = {};
     product.packages = [];
+
     row.map((val, ind) => {
       const specLabel = attrRow[ind];
       if ('' !== val) {
@@ -49,10 +51,22 @@ function buildProductObjs(attrRow, rows) {
         }
       }
     });
-    product.terms.product_cat = [product[f.cat]];
-    product.terms.product_tag = product[f.tag] ? product[f.tag] : ''
-      .split(',').map(term => term.trim());
 
+    // TODO: ONLY FOR TESTING ONE PRODUCT
+    if ('2052' !== product[f.pic] /*|| !product[f.type] */) return undefined;
+    // if ('2052' !== product[f.pic] || !product[f.type]) return undefined;
+
+    // Taxonomies
+    product.terms.product_cat = [product[f.cat]];
+    product.terms.product_tag = product[f.tag] ? product[f.tag]
+      .split(',').map(term => term.trim()) : [];
+
+    // Warranty pieces into one
+    product.warranty.body = product[f.warrantyBody];
+    product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
+      .split('\n').map(line => line.trim()) : [];
+
+    console.log('warranty product', product);
     // Ignore blank rows or incomplete products
     if (product !== undefined && product[f.name] && product[f.pic]) {
       return product;
@@ -120,7 +134,7 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations ? val.variations.splice(0, 40) : [],
-          // warranty: val[f.warranty] ,
+          warranty: val.warranty,
           packages: Object.values(val.packages), // Keys only used for construction
           // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
