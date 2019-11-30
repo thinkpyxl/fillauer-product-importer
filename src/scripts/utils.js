@@ -1,10 +1,18 @@
 import csv from 'csv-parse';
 
 // Utitlity Functions
-function fetcher(url, obj) {
+function fetcher(url, obj, forgiving = true) {
   // Some boilerplate for fetch calls
   return fetch(url, obj)
     .then(res => {
+      if (500 === res.status) {
+        if (forgiving) {
+          console.error('Trying one more time');
+          return fetcher(url, obj, false);
+        } else {
+          console.error('Second attempt failed as well');
+        }
+      }
       return res.json();
     })
     .catch(err => console.error(err, obj));
