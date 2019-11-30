@@ -60,9 +60,13 @@ function update_variations( $value, $prod, $field_name ){
 };
 
 function update_warranty( $value, $prod, $field_name ) {
-	update_field('warranty_body', $value['body'], $prod->ID);
-	foreach( $value['list'] as $item ){ 
-		add_row('warranty_list', ['warranty_item' => $item], $prod->ID );
+	if(array_key_exists('body', $value)){
+		update_field('warranty_body', $value['body'], $prod->ID);
+	}
+	if(array_key_exists('list', $value)){
+		foreach( $value['list'] as $item ){ 
+			add_row('warranty_list', ['warranty_item' => $item], $prod->ID );
+		}
 	}
 }
 function update_specs( $value, $prod, $field_name ) {
