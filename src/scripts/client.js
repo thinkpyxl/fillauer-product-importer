@@ -53,7 +53,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    if ('2052' !== product[f.pic] /*|| !product[f.type] */) return undefined;
+    // if ('2052' !== product[f.pic] /*|| !product[f.type] */) return undefined;
     // if ('2052' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -88,7 +88,7 @@ async function POSTvariations(POSTid, varies, depth = 1) {
     }),
 
   }).then(res => {
-    if (res && 0 !== varies.length && 20 > depth) {
+    if (res && 0 !== varies.length && 30 > depth) {
       return POSTvariations(POSTid, varies, depth + 1);
     }
   });
