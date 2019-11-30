@@ -70,9 +70,9 @@ function keyByPIC(prods) {
   return ProdByPIC;
 }
 
-function splitAndVerify(commaSeperated) {
-  if (!commaSeperated) return [];
-  const rv = commaSeperated.split(',').map(val => {
+function splitAndVerify(commaSeparated) {
+  if (!commaSeparated) return [];
+  const rv = commaSeparated.split(',').map(val => {
     return val.trim();
   });
   if ('' === rv[0]) {
