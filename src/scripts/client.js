@@ -24,7 +24,7 @@ const statusElm = document.querySelector('.import_status');
 // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
 // 2.2 Handle errors.
 
-function buildProductObjs(attrRow, rows, verbose = false) {
+function buildProductObjs(attrRow, rows) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
   const [start, end] = findSpecBounds(attrRow);
@@ -45,22 +45,13 @@ function buildProductObjs(attrRow, rows, verbose = false) {
           product.specs[specLabel] = spec;
         } else {
           // Generic product info
-          //   but use this time to filter out taxonomies as well
-          if (specLabel === f.cat) {
-            product.terms.product_cat = [val];
-          } else if (specLabel === f.tag) {
-            product.terms.product_tag = val.split(',').map(term => {
-              return term.trim();
-            });
-          } else {
-            product[specLabel] = val;
-          }
+          product[specLabel] = val;
         }
       }
     });
-
-    // TODO: remove this debug line for production
-    if (verbose) console.log(product);
+    product.terms.product_cat = [product[f.cat]];
+    product.terms.product_tag = product[f.tag] ? product[f.tag] : ''
+      .split(',').map(term => term.trim());
 
     // Ignore blank rows or incomplete products
     if (product !== undefined && product[f.name] && product[f.pic]) {
@@ -129,6 +120,7 @@ async function POSTproducts(prods, existingProducts) {
           },
           specs: val.specs,
           variations: val.variations ? val.variations.splice(0, 40) : [],
+          // warranty: val[f.warranty] ,
           packages: Object.values(val.packages), // Keys only used for construction
           // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
@@ -166,7 +158,7 @@ async function POSTproducts(prods, existingProducts) {
 
 //
 // TODO: Find the specs that vary across variations; Product Number Generator
-// function findVariationSpecs(variations) {
+// function findVariationSpecs(variations)
 
 function processCSV(parentCSV, variationCSV, packageCSV) {
   // The first row containing attribute names will CONSTantly be referenced
