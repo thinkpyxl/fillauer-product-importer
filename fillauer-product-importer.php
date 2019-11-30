@@ -28,7 +28,135 @@ function register_processor() {
 	wp_enqueue_style( 'product-import-styles');
 }
 
-// TODO: endpoint for taxonomies
+function update_variations( $value, $prod, $field_name ){
+	$variation_index = 1;
+
+	foreach ( $value as $key => $value ) {
+		// Create Variation
+		
+		// error_log(print_r('Variation group: '.$variation_index,true));
+		$group = array(
+			'variation_sku'  => $value['sku'],
+			'variation_name' => $value['name'],
+			'variation_image' => $value['image'],
+		);
+		$variation_index = add_row( 'variations', $group, $prod->ID );
+
+		// Add Specifications for each variation entry
+		foreach ( $value['specs'] as $label => $val ) {
+			add_sub_row(
+				[ 'variations', $variation_index, 'variation_specs' ],
+				[
+					'spec_label' => $label,
+					'spec_value' => $val['val'],
+					// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
+				],
+				$prod->ID
+			);
+		}
+		$variation_index += 1;
+	}
+	return true;
+};
+
+function update_specs( $value, $prod, $field_name ) {
+	// error_log( 'specs ' . print_r( $value, true ) );
+	foreach ( $value as $key => $val ) {
+
+		// error_log( 'specs key' . print_r( $key, true ) );
+		// error_log( 'specs val' . print_r( $val, true ) );
+		
+		$group[] = [
+			'spec_label' => $key,
+			'spec_value' => $val['val'],
+			'logo'       => $val['icon'],
+			'featured'   => $val['featured'],
+		];
+		update_field( 'specifications', $group, $prod->ID );
+	}
+	return true;
+}
+
+function update_packages( $value, $prod, $field_name ) {
+
+	// error_log( 'package ' . print_r( $value, true ) );
+	$package_index = 1;
+	foreach ( $value as $key => $value ) {
+		// error_log( 'package key ' . print_r( $key, true ) );
+		// error_log( 'package value ' . print_r( $value, true ) );
+		// Read product_info to find which fields to toggle
+		$descOn = false;
+		$featsOn = false;
+		$imageOn = false;
+		$table_image = false;
+		if( key_exists( 'image', $value )){
+			$table_image = $value['image'];
+		}
+		foreach ( $value['product_info'] as $val ) {
+			switch($val){
+				case 'name': 
+					$descOn = true;
+				break;
+				case 'description': 
+					$descOn = true;
+				break;
+				case 'features': 
+					$featsOn = true;
+				break;
+				case 'image': 
+					$imageOn = true;
+				break;
+			}	
+		}
+		// Create Package
+		$group[] = [
+			'title'                    => $value['label'],
+			'package_pic'              => $value['pic'], 
+			'model'                    => $value['model'], 
+			'product_info_name'        => $descOn,
+			'product_info_description' => $descOn,
+			'product_info_features'    => $featsOn,
+			'product_info_image'       => $imageOn,
+			'table_image'              => $table_image,
+		];
+		update_field( 'packages', $group, $prod->ID );
+
+		// Add SKUs
+		foreach ( $value['skus'] as $val ) {
+			add_sub_row(
+				[ 'packages', $package_index, 'skus' ],
+				[ 'sku' => $val ],
+				$prod->ID
+			);
+		}
+
+		// Add Headers (for model B accessory tables)
+		foreach ( $value['specs'] as $val ) {
+			add_sub_row(
+				[ 'packages', $package_index, 'headers' ],
+				[ 'header' => $val ],
+				$prod->ID
+			);
+		}
+		$package_index += 1;
+	}
+	return true;
+}
+
+
+function update_taxonomies( $value, $prod, $field_name ) {
+
+	foreach ( $value as $key => $value ) {
+		if( taxonomy_exists($key) ){
+			wp_set_object_terms($prod->ID, $value, $key);
+		}
+		else{
+			error_log( 'UNKNOWN taxonomy:  ' . print_r( $key, true ) );
+		}
+	}
+	return true;
+}
+
 
 add_action(
 	'rest_api_init',
@@ -55,23 +183,7 @@ add_action(
 			'product',
 			'specs',
 			[
-				'update_callback' => function( $value, $prod, $field_name ) {
-					// error_log( 'specs ' . print_r( $value, true ) );
-					foreach ( $value as $key => $val ) {
-
-						// error_log( 'specs key' . print_r( $key, true ) );
-						// error_log( 'specs val' . print_r( $val, true ) );
-						
-						$group[] = [
-							'spec_label' => $key,
-							'spec_value' => $val['val'],
-							'logo'       => $val['icon'],
-							'featured'   => $val['featured'],
-						];
-						update_field( 'specifications', $group, $prod->ID );
-					}
-					return true;
-				},
+				'update_callback' => 'update_specs',
 				'schema'          => null,
 			]
 		);
@@ -79,71 +191,7 @@ add_action(
 			'product',
 			'packages',
 			[
-				'update_callback' => function( $value, $prod, $field_name ) {
-
-					// error_log( 'package ' . print_r( $value, true ) );
-					$package_index = 1;
-					foreach ( $value as $key => $value ) {
-						// error_log( 'package key ' . print_r( $key, true ) );
-						// error_log( 'package value ' . print_r( $value, true ) );
-						// Read product_info to find which fields to toggle
-						$descOn = false;
-						$featsOn = false;
-						$imageOn = false;
-						$table_image = false;
-						if( key_exists( 'image', $value )){
-							$table_image = $value['image'];
-						}
-						foreach ( $value['product_info'] as $val ) {
-							switch($val){
-								case 'name': 
-									$descOn = true;
-								break;
-								case 'description': 
-									$descOn = true;
-								break;
-								case 'features': 
-									$featsOn = true;
-								break;
-								case 'image': 
-									$imageOn = true;
-								break;
-							}	
-						}
-						// Create Package
-						$group[] = [
-							'title'                    => $value['label'],
-							'package_pic'              => $value['pic'], 
-							'model'                    => $value['model'], 
-							'product_info_name'        => $descOn,
-							'product_info_description' => $descOn,
-							'product_info_features'    => $featsOn,
-							'product_info_image'       => $imageOn,
-							'table_image'              => $table_image,
-						];
-						update_field( 'packages', $group, $prod->ID );
-
-						// Add SKUs
-						foreach ( $value['skus'] as $val ) {
-							add_sub_row(
-								[ 'packages', $package_index, 'skus' ],
-								[ 'sku' => $val ],
-								$prod->ID
-							);
-						}
-
-						// Add Headers (for model B accessory tables)
-						foreach ( $value['specs'] as $val ) {
-							add_sub_row(
-								[ 'packages', $package_index, 'headers' ],
-								[ 'header' => $val ],
-								$prod->ID
-							);
-						}
-						$package_index += 1;
-					}
-					return true;
-				},
+				'update_callback' => 'update_packages',
 				'schema'          => null,
 			]
 		);
@@ -151,37 +199,7 @@ add_action(
 			'product',
 			'variations',
 			[
-				'update_callback' => function( $value, $prod, $field_name ) {
-
-					$variation_index = 1;
-					
-					foreach ( $value as $key => $value ) {
-						// Create Variation
-						
-						// error_log(print_r('Variation group: '.$variation_index,true));
-						$group = array(
-							'variation_sku'  => $value['sku'],
-							'variation_name' => $value['name'],
-							'variation_image' => $value['image'],
-						);
-						$variation_index = add_row( 'variations', $group, $prod->ID );
-
-						// Add Specifications for each variation entry
-						foreach ( $value['specs'] as $label => $val ) {
-							add_sub_row(
-								[ 'variations', $variation_index, 'variation_specs' ],
-								[
-									'spec_label' => $label,
-									'spec_value' => $val['val'],
-									// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
-								],
-								$prod->ID
-							);
-						}
-						$variation_index += 1;
-					}
-					return true;
-				},
+				'update_callback' => 'update_variations',
 				'schema'          => null,
 			]
 		);
@@ -189,18 +207,7 @@ add_action(
 			'product',
 			'terms',
 			[
-				'update_callback' => function( $value, $prod, $field_name ) {
-
-					foreach ( $value as $key => $value ) {
-						if( taxonomy_exists($key) ){
-							wp_set_object_terms($prod->ID, $value, $key);
-						}
-						else{
-							error_log( 'UNKNOWN taxonomy:  ' . print_r( $key, true ) );
-						}
-					}
-					return true;
-				},
+				'update_callback' => 'update_taxonomies',
 				'schema'          => null,
 			]
 		);
