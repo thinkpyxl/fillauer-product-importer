@@ -253,16 +253,6 @@ function linkPackages(parents, packs) {
 // confirm definition of properties that will be used in POST
 //    used for cleaning taxonomies for now
 function verifyFields(prod) {
-  prod.terms = {};
-  if (prod[f.cat] !== undefined) {
-    prod.terms.product_cat = [prod[f.cat]];
-  }
-  if (prod[f.tax] !== undefined) {
-    prod.terms.product_tax = [prod[f.tax]].split(',').map(val => {
-      return val.trim();
-    });
-  }
-
   return prod;
 }
 

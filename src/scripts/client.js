@@ -34,16 +34,27 @@ function buildProductObjs(attrRow, rows, verbose = false) {
   const products = rows.splice(1).map(row => {
     const product = {};
     product.specs = {};
+    product.terms = {};
     product.packages = [];
     row.map((val, ind) => {
+      const specLabel = attrRow[ind];
       if ('' !== val) {
         // Specification or generic product information
-        const spec = buildSpec(start, end, ind, val, icons[attrRow[ind]]);
+        const spec = buildSpec(start, end, ind, val, icons[specLabel]);
         if (spec) {
-          product.specs[attrRow[ind]] = spec;
+          product.specs[specLabel] = spec;
         } else {
           // Generic product info
-          product[attrRow[ind]] = val;
+          //   but use this time to filter out taxonomies as well
+          if (specLabel === f.cat) {
+            product.terms.product_cat = [val];
+          } else if (specLabel === f.tag) {
+            product.terms.product_tag = val.split(',').map(term => {
+              return term.trim();
+            });
+          } else {
+            product[specLabel] = val;
+          }
         }
       }
     });
@@ -98,7 +109,7 @@ async function POSTproducts(prods, existingProducts) {
 
   Object.values(prods)
     .map(val => {
-      val = verifyFields(val);
+      // val = verifyFields(val);   // Until this is used...
       fetcher(`${wpApiSettings.root}wp/v2/product`, {
         method: 'post',
         headers: {

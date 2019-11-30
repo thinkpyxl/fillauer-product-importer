@@ -192,10 +192,11 @@ add_action(
 				'update_callback' => function( $value, $prod, $field_name ) {
 
 					foreach ( $value as $key => $value ) {
-						// error_log( 'term key' . print_r( $key, true ) );
-						// error_log( 'term val' . print_r( $value, true ) );
 						if( taxonomy_exists($key) ){
 							wp_set_object_terms($prod->ID, $value, $key);
+						}
+						else{
+							error_log( 'UNKNOWN taxonomy:  ' . print_r( $key, true ) );
 						}
 					}
 					return true;
