@@ -70,6 +70,12 @@ function update_warranty( $value, $prod, $field_name ) {
 	}
 }
 
+function update_features( $value, $prod, $field_name ) {
+	foreach( $value as $item ){ 
+		add_row('product_feats', ['product_feat' => $item], $prod->ID );
+	}
+}
+
 function update_indications( $value, $prod, $field_name ) {
 	foreach( $value as $item ){ 
 		add_row('indication_list', ['indication_item' => $item], $prod->ID );
@@ -239,6 +245,14 @@ add_action(
 			'warranty',
 			[
 				'update_callback' => 'update_warranty',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'features',
+			[
+				'update_callback' => 'update_features',
 				'schema'          => null,
 			]
 		);

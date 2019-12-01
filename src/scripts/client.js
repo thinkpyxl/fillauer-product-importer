@@ -68,6 +68,10 @@ function buildProductObjs(attrRow, rows) {
     product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
       .split('\n').map(line => line.trim()) : [];
 
+    // Features
+    product.features = product[f.feats] ? product[f.feats]
+      .split('\n').map(line => line.trim()) : [];
+
     // Indications
     product.indications = product[f.indict] ? product[f.indict]
       .split('\n').map(line => line.trim()) : [];
@@ -152,6 +156,7 @@ async function POSTproducts(prods, existingProducts) {
           specs: val.specs,
           variations: val.variations ? val.variations.splice(0, 40) : [],
           warranty: val.warranty,
+          features: val.features,
           indications: val.indications,
           downloads: val.downloads,
           packages: Object.values(val.packages), // Keys only used for construction
