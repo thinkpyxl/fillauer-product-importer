@@ -1,9 +1,8 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import { f } from './fields.js';
-import { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
+import { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
 import { fetcher, deleteProducts, readFilePromise, testCall } from './utils.js';
-import hash from 'object-hash';
 
 console.log('client-side script executed');
 
@@ -56,7 +55,7 @@ function buildProductObjs(attrRow, rows) {
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
     // if ('2068' !== product[f.pic] /* || !product[f.type] */) return undefined;
-    if ('2069' !== product[f.pic] || !product[f.type]) return undefined;
+    if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
     product.terms.product_cat = [product[f.cat]];
@@ -117,24 +116,29 @@ async function POSTvariations(POSTid, varies, depth = 1) {
 
 async function POSTproducts(prods, existingProducts) {
   // return console.log(Object.values(prods))
-  const Nprod = Object.keys(prods).length;
+  const [toDelete, toIgnore] = compareHashesForPayload(prods, existingProducts);
+  const Nprod = Object.keys(prods).length - toIgnore.length;
   let cnt = 0;
 
   //  Traverse through variations and build product series object
-  const collidingProducts = findCollisionsWithProducts(prods, existingProducts);
-  if (0 < collidingProducts.length) {
-    statusElm.textContent = `Product collisions found. Deleting ${collidingProducts.length} products...`;
+  if (0 === Nprod) {
+    statusElm.textContent = 'A new product has not been detected. Nothing to upload.';
+  } else if (0 < toDelete.length) {
+    statusElm.textContent = `Product collisions found. Deleting ${toDelete.length} products...`;
   }
-  await Promise.all(deleteProducts(collidingProducts)).then(
+
+  await Promise.all(deleteProducts(toDelete)).then(
     status => {
       console.log('finished deleting');
     },
   );
 
-  statusElm.textContent = `Uploading products: ${cnt} of ${Nprod} received`;
-
   Object.values(prods)
     .map(val => {
+      if (toIgnore.includes(val[f.pic])) {
+        console.log('This product should not be uploaded');
+        return false;
+      }
       // val = verifyFields(val);   // Until this is used...
       fetcher(`${wpApiSettings.root}wp/v2/product`, {
         method: 'post',
@@ -152,6 +156,7 @@ async function POSTproducts(prods, existingProducts) {
             SKU: 'simple' === val[f.type] ? val[f.sku] : '',
             PIC: val[f.pic],
             product_type: val[f.type],
+            product_hash: val.checksum, // Used for finding changes between new imports and wp posts
           },
           specs: val.specs,
           variations: val.variations ? val.variations.splice(0, 40) : [],
@@ -160,7 +165,6 @@ async function POSTproducts(prods, existingProducts) {
           indications: val.indications,
           downloads: val.downloads,
           packages: Object.values(val.packages), // Keys only used for construction
-          // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
             {
               label: 'Fitting Tools',
@@ -218,12 +222,15 @@ function processCSV(parentCSV, variationCSV, packageCSV) {
 
   const productsWithVariations = linkVariations(productsByPIC, importedVariations);
 
-  const products = linkPackages(productsWithVariations, packageCSV);
-  console.log('packaged ', products);
+  const productsWithPackages = linkPackages(productsWithVariations, packageCSV);
+  console.log('packaged ', productsWithPackages);
 
   statusElm.textContent = `Products have been processed. ${
-    Object.keys(products).length
+    Object.keys(productsWithPackages).length
   } unique PICs found`;
+
+  // LAST STEP: Once all products are COMPLETELY assembled, save hash for checksum
+  const products = computeChecksum(productsWithPackages);
 
   return products;
 }

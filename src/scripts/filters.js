@@ -1,4 +1,5 @@
 import { f } from './fields.js';
+import hash from 'object-hash';
 
 //   The attribute column right before specifications start
 const b_SpecsStart = 'Specification Start';
@@ -37,18 +38,40 @@ function findSpecIcons(attrRow, row) {
   return icons;
 }
 
-function findCollisionsWithProducts(newProds, existing) {
+function computeChecksum(prods) {
+  Object.values(prods).map((prod) => {
+    prods[prod[f.pic]].checksum = hash(prod);
+  });
+  console.log('HASHed', prods);
+  return prods;
+}
+
+function compareHashesForPayload(newProds, existing) {
   if (!existing) return [];
-  const rv = existing
-    .map(val => {
-      if (newProds[val.meta.PIC]) return val.id;
-      else return false;
+  const toIgnore = [];
+  const toDelete = Object.values(existing)
+    .map(wpProd => {
+      if (newProds[wpProd.meta.PIC]) {
+        console.log(`Existing product found, comparing hash for ${wpProd.title.rendered}`);
+        if (String(newProds[wpProd.meta.PIC].checksum) !== String(wpProd.meta.product_hash)) {
+          console.log(`Hashes differ, staging for delete.
+            ${newProds[wpProd.meta.PIC].checksum} vs ${wpProd.meta.product_hash}`);
+          return wpProd.id;
+        } else {
+          // Hashes match so don't re-upload without new product changes
+          console.log('Ignoring', wpProd.title.rendered);
+          toIgnore.push(wpProd.meta.PIC[0]);
+        }
+      } else {
+        // Nothing to delete, completely new product
+        return false;
+      }
     })
     .filter(val => {
       if (val) return true;
     });
-  console.log(rv);
-  return rv;
+  console.log(toDelete);
+  return [toDelete, toIgnore];
 }
 
 function keyByPIC(prods) {
@@ -295,4 +318,4 @@ function buildSpec(start, end, ind, val, icon) {
   return false;
 }
 
-export { findSpecBounds, findSpecIcons, findCollisionsWithProducts, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec };
+export { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec };
