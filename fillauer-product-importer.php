@@ -83,15 +83,15 @@ function update_indications( $value, $prod, $field_name ) {
 }
 
 function update_downloads( $value, $prod, $field_name ) {
-	error_log('Downloads '.print_r($value, true));
-
 	foreach( $value as $item ){ 
-		add_row('download_list', [
-			'download' => [
-				'title' => $item['title'], 
-				'url' => $item['url']
-			]
-		], $prod->ID );
+		if( array_key_exists(['title', 'url'], $item)){
+			add_row('download_list', [
+				'download' => [
+					'title' => $item['title'], 
+					'url' => $item['url']
+				]
+			], $prod->ID );
+		}
 	}
 }
 

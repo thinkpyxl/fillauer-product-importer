@@ -12,6 +12,8 @@ function fetcher(url, obj, forgiving = true) {
         } else {
           console.error('Second attempt failed as well');
         }
+      } else if (forgiving) {
+        console.log('Second attempt success!');
       }
       return res.json();
     })
