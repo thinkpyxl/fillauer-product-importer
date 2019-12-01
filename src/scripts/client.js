@@ -54,8 +54,8 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2068' !== product[f.pic] /* || !product[f.type] */) return undefined;
-    if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
+    // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
     product.terms.product_cat = [product[f.cat]];
