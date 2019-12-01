@@ -69,6 +69,27 @@ function update_warranty( $value, $prod, $field_name ) {
 		}
 	}
 }
+
+function update_indications( $value, $prod, $field_name ) {
+	foreach( $value as $item ){ 
+		add_row('indication_list', ['indication_item' => $item], $prod->ID );
+	}
+}
+
+function update_downloads( $value, $prod, $field_name ) {
+	error_log('Downloads '.print_r($value, true));
+
+	foreach( $value as $item ){ 
+		add_row('download_list', [
+			'download' => [
+				'title' => $item['title'], 
+				'url' => $item['url']
+			]
+		], $prod->ID );
+	}
+}
+
+
 function update_specs( $value, $prod, $field_name ) {
 	// error_log( 'specs ' . print_r( $value, true ) );
 	foreach ( $value as $key => $val ) {
@@ -218,6 +239,22 @@ add_action(
 			'warranty',
 			[
 				'update_callback' => 'update_warranty',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'indications',
+			[
+				'update_callback' => 'update_indications',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'downloads',
+			[
+				'update_callback' => 'update_downloads',
 				'schema'          => null,
 			]
 		);

@@ -21,6 +21,8 @@ const f = {
   indent: 'Indention',
   warrantyList: 'Warranty List',
   warrantyBody: 'Warranty Body',
+  indict: 'Indications',
+  downs: 'Downloads',
 };
 
 export { f };

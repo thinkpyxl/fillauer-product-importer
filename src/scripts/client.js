@@ -36,6 +36,8 @@ function buildProductObjs(attrRow, rows) {
     product.specs = {};
     product.terms = {};
     product.warranty = {};
+    product.indications = [];
+    product.downloads = [];
     product.packages = [];
 
     row.map((val, ind) => {
@@ -53,8 +55,8 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2052' !== product[f.pic] /*|| !product[f.type] */) return undefined;
-    // if ('2052' !== product[f.pic] || !product[f.type]) return undefined;
+    // if ('2068' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    if ('2069' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
     product.terms.product_cat = [product[f.cat]];
@@ -66,7 +68,22 @@ function buildProductObjs(attrRow, rows) {
     product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
       .split('\n').map(line => line.trim()) : [];
 
-    console.log('warranty product', product);
+    // Indications
+    product.indications = product[f.indict] ? product[f.indict]
+      .split('\n').map(line => line.trim()) : [];
+
+    // Downloads
+    product[f.downs] = product[f.downs] ? product[f.downs]
+      .split(',').map(val => val.trim()) : [];
+
+    // Parse downloads
+    for (let i = 0; i < product[f.downs].length; i += 2) {
+      product.downloads.push({
+        title: product[f.downs][i],
+        url: product[f.downs][i + 1],
+      });
+    }
+
     // Ignore blank rows or incomplete products
     if (product !== undefined && product[f.name] && product[f.pic]) {
       return product;
@@ -135,6 +152,8 @@ async function POSTproducts(prods, existingProducts) {
           specs: val.specs,
           variations: val.variations ? val.variations.splice(0, 40) : [],
           warranty: val.warranty,
+          indications: val.indications,
+          downloads: val.downloads,
           packages: Object.values(val.packages), // Keys only used for construction
           // checksum: hash(val), // Used for finding changes between new imports and wp posts
           /* packages: [
