@@ -39,6 +39,7 @@ function update_variations( $value, $prod, $field_name ){
 			'variation_sku'  => $value['sku'],
 			'variation_name' => $value['name'],
 			'variation_image' => $value['image'],
+			'variation_indentation' => array_key_exists('indent', $value) ? $value['indent'] : '',
 		);
 		$variation_index = add_row( 'variations', $group, $prod->ID );
 
@@ -76,6 +77,12 @@ function update_features( $value, $prod, $field_name ) {
 	}
 }
 
+function update_related_products( $value, $prod, $field_name ) {
+	foreach( $value as $item ){ 
+		add_row('related_products', ['related_product' => $item], $prod->ID );
+	}
+}
+
 function update_indications( $value, $prod, $field_name ) {
 	foreach( $value as $item ){ 
 		add_row('indication_list', ['indication_item' => $item], $prod->ID );
@@ -84,7 +91,7 @@ function update_indications( $value, $prod, $field_name ) {
 
 function update_downloads( $value, $prod, $field_name ) {
 	foreach( $value as $item ){ 
-		if( array_key_exists(['title', 'url'], $item)){
+		if( array_key_exists('title', $item) && array_key_exists('url', $item)){
 			add_row('download_list', [
 				'download' => [
 					'title' => $item['title'], 
@@ -245,6 +252,14 @@ add_action(
 			'warranty',
 			[
 				'update_callback' => 'update_warranty',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'related',
+			[
+				'update_callback' => 'update_related_products',
 				'schema'          => null,
 			]
 		);
