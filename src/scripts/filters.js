@@ -136,6 +136,7 @@ function linkVariations(parents, varies) {
       name: val[f.name],
       sku: val[f.sku],
       image: val[f.image] ? val[f.image] : false,
+      indent: val[f.indent] ? val[f.indent] : '',
       specs: val.specs,
       package: val[f.package],
     });
@@ -159,7 +160,7 @@ function linkPackages(parents, packs) {
       model: 'B',
       skus: [],
       specs: [], // This needs to be pulled from varying attributes
-      product_info: [],
+      product_info: ['name', 'description', 'image'],
     };
 
     if (prod.variations) {
@@ -238,9 +239,9 @@ function linkPackages(parents, packs) {
             product_info: [],
           };
         }
+
         // For every field that is defined by the package sheet, confirm and re-specify.
         if (packs[id][f.image]) {
-          console.log('image found');
           packages['custom' + id].model = 'D';
           packages['custom' + id].image = packs[id][f.image];
         }
@@ -248,11 +249,9 @@ function linkPackages(parents, packs) {
           packages['custom' + id].pic = packs[id][f.pic];
         }
         if (packs[id][f.skus]) {
-          // ? Is this merging properly?
           packages['custom' + id].skus.push(...packs[id][f.skus]);
         }
         if (packs[id][f.attr]) {
-          console.log(packs[id][f.attr]);
           packages['custom' + id].specs = packs[id][f.attr];
         }
         if (packs[id][f.title]) {
@@ -267,6 +266,7 @@ function linkPackages(parents, packs) {
       });
     }
 
+    // Packages makes up both packages implicitly defined in variations and explicitly from the sheet
     parents[prod[f.pic]].packages = packages;
   });
 

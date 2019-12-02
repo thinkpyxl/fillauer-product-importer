@@ -75,6 +75,10 @@ function buildProductObjs(attrRow, rows) {
     product.indications = product[f.indict] ? product[f.indict]
       .split('\n').map(line => line.trim()) : [];
 
+    // Related Products
+    product.related = product[f.related] ? product[f.related]
+      .split(',').map(val => val.trim()) : [];
+
     // Downloads
     product[f.downs] = product[f.downs] ? product[f.downs]
       .split(',').map(val => val.trim()) : [];
@@ -133,6 +137,8 @@ async function POSTproducts(prods, existingProducts) {
     },
   );
 
+  statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
+
   Object.values(prods)
     .map(val => {
       if (toIgnore.includes(val[f.pic])) {
@@ -154,6 +160,7 @@ async function POSTproducts(prods, existingProducts) {
           terms: val.terms,
           meta: {
             SKU: 'simple' === val[f.type] ? val[f.sku] : '',
+            order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
             PIC: val[f.pic],
             product_type: val[f.type],
             product_hash: val.checksum, // Used for finding changes between new imports and wp posts
@@ -164,6 +171,7 @@ async function POSTproducts(prods, existingProducts) {
           features: val.features,
           indications: val.indications,
           downloads: val.downloads,
+          related: val.related,
           packages: Object.values(val.packages), // Keys only used for construction
           /* packages: [
             {
