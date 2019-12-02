@@ -16,7 +16,8 @@
     "online": true
   },
   "vendors": [
-    "csv-parse/lib/index.js"
+    "csv-parse/lib/index.js",
+    "object-hash/index.js"
   ],
   "dependencies": {
     "aos": "^2.3.4",
