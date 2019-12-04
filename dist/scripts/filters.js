@@ -524,7 +524,7 @@ function buildSpec(start, end, ind, val, icon) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/jake/local/fillauer/app/public/wp-content/plugins/fillauer-product-importer/src/scripts/filters.js */"./src/scripts/filters.js");
+module.exports = __webpack_require__(/*! /Users/jake/repos/fillauer-product-importer/src/scripts/filters.js */"./src/scripts/filters.js");
 
 
 /***/ })
