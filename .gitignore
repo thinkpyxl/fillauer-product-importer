@@ -1,5 +1,4 @@
 ## Plug-in ignores
-dist
 sample
 ## Globally Ignored
 .DS_Store
