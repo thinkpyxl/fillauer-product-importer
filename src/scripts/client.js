@@ -67,6 +67,10 @@ function buildProductObjs(attrRow, rows) {
     product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
       .split('\n').map(line => line.trim()) : [];
 
+    // Gallery
+    product.gallery = product[f.image] ? product[f.image]
+      .split(',').map(item => item.trim()) : [];
+
     // Features
     product.features = product[f.feats] ? product[f.feats]
       .split('\n').map(line => line.trim()) : [];
@@ -166,6 +170,7 @@ async function POSTproducts(prods, existingProducts) {
             product_hash: val.checksum, // Used for finding changes between new imports and wp posts
           },
           specs: val.specs,
+          gallery: val.gallery,
           variations: val.variations ? val.variations.splice(0, 40) : [],
           warranty: val.warranty,
           features: val.features,

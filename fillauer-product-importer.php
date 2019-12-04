@@ -61,6 +61,12 @@ function update_variations( $value, $prod, $field_name ){
 	return true;
 };
 
+function update_gallery( $value, $prod, $field_name ) {
+	foreach( $value as $item ){ 
+		add_row('gallery_list', ['asset_id' => $item], $prod->ID );
+	}
+}
+
 function update_warranty( $value, $prod, $field_name ) {
 	if(array_key_exists('body', $value)){
 		update_field('warranty_body', $value['body'], $prod->ID);
@@ -221,6 +227,14 @@ add_action(
 					}
 					return true;
 				},
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'gallery',
+			[
+				'update_callback' => 'update_gallery',
 				'schema'          => null,
 			]
 		);
