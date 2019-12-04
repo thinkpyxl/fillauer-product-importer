@@ -265,6 +265,13 @@ function linkPackages(parents, packs) {
         }
       });
     }
+    // TODO: Test with Posterior Mounting Brackets with the art of linking via label and specify specs in sheet
+    // TODO:  nevermind, but test anyways
+
+    // TODO: Confirm that the first package is the 'drop' package
+    if (Object.values(packages)[0] && '' !== Object.values(packages)[0].label) {
+      window.alert(`${prod[f.name]} should be specifying main product variations first!`);
+    }
 
     // Packages makes up both packages implicitly defined in variations and explicitly from the sheet
     parents[prod[f.pic]].packages = packages;

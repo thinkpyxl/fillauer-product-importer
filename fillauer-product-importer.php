@@ -2,6 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
+ * Version: 1.4.3
  */
 
 
@@ -308,6 +309,5 @@ add_action( 'importer_enqueue_scripts', 'register_processor' );
 
 function product_import_page() {
 	do_action( 'importer_enqueue_scripts' );
-	echo '<h2>Welcome to my plugin. Snacks are in the back</h2>';
 	include 'plugin-page.php';
 }
