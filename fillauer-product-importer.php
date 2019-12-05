@@ -62,8 +62,14 @@ function update_variations( $value, $prod, $field_name ){
 };
 
 function update_gallery( $value, $prod, $field_name ) {
+	$featured = true;
 	foreach( $value as $item ){ 
+		if ( $featured && ! strpos( $item, 'http' ) ) {
+			set_post_thumbnail( $prod->ID, $item );
+		}
 		add_row('gallery_list', ['asset_id' => $item], $prod->ID );
+
+		$featured = false;
 	}
 }
 
@@ -194,15 +200,48 @@ function update_packages( $value, $prod, $field_name ) {
 	return true;
 }
 
-
 function update_taxonomies( $value, $prod, $field_name ) {
 
-	foreach ( $value as $key => $value ) {
-		if( taxonomy_exists($key) ){
-			wp_set_object_terms($prod->ID, $value, $key);
-		}
-		else{
-			error_log( 'UNKNOWN taxonomy:  ' . print_r( $key, true ) );
+	foreach ( $value as $key => $val ) {
+		if ( taxonomy_exists( $key ) ) {
+
+			// Checks that hierarchal terms exist before associating with product.
+			if ( 'product_cat' === $key ) {
+				$terms = explode( '>', $val[0] );
+				if ( ! empty( $terms ) ) {
+					$parent_term = '';
+					$insert = [];
+					foreach ( $terms as $term ) {
+						$term = trim( $term );
+						if ( ! term_exists( $term, 'product_cat' ) ) {
+							$args = [];
+							// If parent is not empty creates this term as a child of the parent.
+							if ( ! empty( $parent_term ) ) {
+								$parent_term = get_term_by( 'name', $parent_term, 'product_cat' );
+								$args = [
+									'parent' => $parent_term->term_id,
+								];
+							}
+
+							// Inserts the term.
+							wp_insert_term( $term, 'product_cat', $args );
+						}
+						$term_object = get_term_by( 'name', $term, 'product_cat' );
+
+						$insert[]    = $term_object->term_id;
+						$parent_term = $term;
+					}
+					// Attaches all terms at once.
+					wp_set_object_terms( $prod->ID, $insert, $key );
+				}
+			} else {
+				// Just attach it to this product.
+				wp_set_object_terms( $prod->ID, $val, $key );
+			}
+		} else {
+			if ( function_exists( '_log' ) ) {
+				_log( 'Line Number: ' . __LINE__ . ' - Taxonomy ' . $key . ' does not exist.' );
+			}
 		}
 	}
 	return true;
