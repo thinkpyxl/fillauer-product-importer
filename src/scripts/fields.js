@@ -26,6 +26,7 @@ const f = {
   related: 'Related Products',
   indict: 'Indications',
   downs: 'Downloads',
+  main_model: 'Main Model',
 };
 
 export { f };

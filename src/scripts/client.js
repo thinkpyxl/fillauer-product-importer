@@ -164,10 +164,11 @@ async function POSTproducts(prods, existingProducts) {
           terms: val.terms,
           meta: {
             SKU: 'simple' === val[f.type] ? val[f.sku] : '',
-            order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
             PIC: val[f.pic],
+            order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
             product_type: val[f.type],
             product_hash: val.checksum, // Used for finding changes between new imports and wp posts
+            main_model: val[f.main_model] ? val[f.main_model] : 'E',
           },
           specs: val.specs,
           gallery: val.gallery,
