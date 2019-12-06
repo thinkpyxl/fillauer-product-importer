@@ -126,11 +126,20 @@ function buildPackageObj(packages) {
 }
 
 function linkVariations(parents, varies) {
+  // Give all parents an array first, and if prod.type is simple,
+  //        copy the sku and name to make a basic variation
+  Object.values(parents).map(prod => {
+    parents[prod[f.pic]].variations = [];
+    if ('simple' === prod[f.type]) {
+      parents[prod[f.pic]].variations.push({
+        name: prod[f.name],
+        sku: prod[f.sku],
+      });
+    }
+  });
+
   varies.map(val => {
     if (undefined === parents[val[f.pic]]) return false;
-    if (!parents[val[f.pic]].variations) {
-      parents[val[f.pic]].variations = [];
-    }
 
     parents[val[f.pic]].variations.push({
       name: val[f.name],
@@ -226,7 +235,7 @@ function linkPackages(parents, packs) {
         // This is a package who's name derives from PIC
         id = id.trim();
         // Before making custom package, make sure the variations didn't already define it.
-        if (packages[packs[id][f.title]]) {
+        if (packs[id][f.title] & packages[packs[id][f.title]]) {
           packages['custom' + id] = packages[packs[id][f.title]];
           delete packages[packs[id][f.title]];
         } else /* Otherwise, build the new package */ {
@@ -268,10 +277,11 @@ function linkPackages(parents, packs) {
     // TODO: Test with Posterior Mounting Brackets with the art of linking via label and specify specs in sheet
     // TODO:  nevermind, but test anyways
 
-    // TODO: Confirm that the first package is the 'drop' package
-    if (Object.values(packages)[0] && '' !== Object.values(packages)[0].label) {
-      window.alert(`${prod[f.name]} should be specifying main product variations first!`);
-    }
+    /// / : Confirm that the first package is the 'drop' package
+    // TODO: Stop using the drop package...
+    // if (Object.values(packages)[0] && '' !== Object.values(packages)[0].label) {
+    //   window.alert(`${prod[f.name]} should be specifying main product variations first!`);
+    // }
 
     // Packages makes up both packages implicitly defined in variations and explicitly from the sheet
     parents[prod[f.pic]].packages = packages;

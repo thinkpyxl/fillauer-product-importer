@@ -105,15 +105,17 @@ function buildProductObjs(attrRow, rows) {
 
 async function POSTvariations(POSTid, varies, depth = 1) {
   console.log(`Posting more variations at a depth of ${depth}`);
+  const payload = JSON.stringify({
+    variations: varies.splice(0, 24), // The best value for preventing large variation POST crashes
+  });
+  console.log('variations payload: ', payload);
   await fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
     method: 'post',
     headers: {
       'X-WP-Nonce': wpApiSettings.nonce,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      variations: varies.splice(0, 24), // The best value for preventing large variation POST crashes
-    }),
+    body: payload,
 
   }).then(res => {
     if (res && 0 !== varies.length && 30 > depth) {

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.4.6
+ * Version: 1.4.7
  */
 
 
@@ -126,8 +126,8 @@ function update_specs( $value, $prod, $field_name ) {
 		$group[] = [
 			'spec_label' => $key,
 			'spec_value' => $val['val'],
-			'logo'       => $val['icon'],
-			'featured'   => $val['featured'],
+			'logo'       => array_key_exists('icon', $val) ? $val['icon'] : 'cog',
+			'featured'   => array_key_exists('featured', $val) ? $val['featured'] : false,
 		];
 		update_field( 'specifications', $group, $prod->ID );
 	}
