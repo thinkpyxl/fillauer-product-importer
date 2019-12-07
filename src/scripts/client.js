@@ -1,13 +1,12 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import { f } from './fields.js';
-import { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec } from './filters.js';
-import { fetcher, deleteProducts, readFilePromise, testCall } from './utils.js';
+import { computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
+import { fetcher, readFilePromise } from './utils.js';
+import { POSTproducts } from './rest.js';
+import { buildProductObjs } from './products';
 
 console.log('client-side script executed');
-
-// Status is updated in several functions
-const statusElm = document.querySelector('.import_status');
 
 //   Mizner notes
 //                  https://wordpress.org/plugins/acf-to-rest-api/
@@ -23,202 +22,11 @@ const statusElm = document.querySelector('.import_status');
 // 2.2 Send XHR/Ajax/fetch (consider axios or similar) POST request to WP REST API
 // 2.2 Handle errors.
 
-function buildProductObjs(attrRow, rows) {
-  // This will go through a CSV and create an array
-  //   of product objects keyed to the attribute name
-  const [start, end] = findSpecBounds(attrRow);
-  const icons = findSpecIcons(attrRow, rows[1]);
-
-  // Splice to avoid first two rows of attribute names and icons
-  const products = rows.splice(1).map(row => {
-    const product = {};
-    product.specs = {};
-    product.terms = {};
-    product.warranty = {};
-    product.indications = [];
-    product.downloads = [];
-    product.packages = [];
-
-    row.map((val, ind) => {
-      const specLabel = attrRow[ind];
-      if ('' !== val) {
-        // Specification or generic product information
-        const spec = buildSpec(start, end, ind, val, icons[specLabel]);
-        if (spec) {
-          product.specs[specLabel] = spec;
-        } else {
-          // Generic product info
-          product[specLabel] = val;
-        }
-      }
-    });
-
-    // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
-    // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
-
-    // Taxonomies
-    product.terms.product_cat = [product[f.cat]];
-    product.terms.product_tag = product[f.tag] ? product[f.tag]
-      .split(',').map(term => term.trim()) : [];
-
-    // Warranty pieces into one
-    product.warranty.body = product[f.warrantyBody];
-    product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
-      .split('\n').map(line => line.trim()) : [];
-
-    // Gallery
-    product.gallery = product[f.image] ? product[f.image]
-      .split(',').map(item => item.trim()) : [];
-
-    // Features
-    product.features = product[f.feats] ? product[f.feats]
-      .split('\n').map(line => line.trim()) : [];
-
-    // Indications
-    product.indications = product[f.indict] ? product[f.indict]
-      .split('\n').map(line => line.trim()) : [];
-
-    // Related Products
-    product.related = product[f.related] ? product[f.related]
-      .split(',').map(val => val.trim()) : [];
-
-    // Downloads
-    product[f.downs] = product[f.downs] ? product[f.downs]
-      .split(',').map(val => val.trim()) : [];
-
-    // Parse downloads
-    for (let i = 0; i < product[f.downs].length; i += 2) {
-      product.downloads.push({
-        title: product[f.downs][i],
-        url: product[f.downs][i + 1],
-      });
-    }
-
-    // Ignore blank rows or incomplete products
-    if (product !== undefined && product[f.name] && product[f.pic]) {
-      return product;
-    }
-  });
-  return products.filter(prod => prod !== undefined);
-}
-
-async function POSTvariations(POSTid, varies, depth = 1) {
-  console.log(`Posting more variations at a depth of ${depth}`);
-  const payload = JSON.stringify({
-    variations: varies.splice(0, 24), // The best value for preventing large variation POST crashes
-  });
-  console.log('variations payload: ', payload);
-  await fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
-    method: 'post',
-    headers: {
-      'X-WP-Nonce': wpApiSettings.nonce,
-      'Content-Type': 'application/json',
-    },
-    body: payload,
-
-  }).then(res => {
-    if (res && 0 !== varies.length && 30 > depth) {
-      return POSTvariations(POSTid, varies, depth + 1);
-    }
-  });
-}
-
-async function POSTproducts(prods, existingProducts) {
-  // return console.log(Object.values(prods))
-  const [toDelete, toIgnore] = compareHashesForPayload(prods, existingProducts);
-  const Nprod = Object.keys(prods).length - toIgnore.length;
-  let cnt = 0;
-
-  //  Traverse through variations and build product series object
-  if (0 === Nprod) {
-    statusElm.textContent = 'A new product has not been detected. Nothing to upload.';
-  } else if (0 < toDelete.length) {
-    statusElm.textContent = `Product collisions found. Deleting ${toDelete.length} products...`;
-  }
-
-  await Promise.all(deleteProducts(toDelete)).then(
-    status => {
-      console.log('finished deleting');
-    },
-  );
-
-  statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
-
-  Object.values(prods)
-    .map(val => {
-      if (toIgnore.includes(val[f.pic])) {
-        console.log('This product should not be uploaded');
-        return false;
-      }
-      // val = verifyFields(val);   // Until this is used...
-      fetcher(`${wpApiSettings.root}wp/v2/product`, {
-        method: 'post',
-        headers: {
-          'X-WP-Nonce': wpApiSettings.nonce,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: val[f.name],
-          content: val[f.desc],
-          excerpt: val[f.short_desc],
-          status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
-          terms: val.terms,
-          meta: {
-            SKU: 'simple' === val[f.type] ? val[f.sku] : '',
-            PIC: val[f.pic],
-            order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
-            product_type: val[f.type],
-            product_hash: val.checksum, // Used for finding changes between new imports and wp posts
-            main_model: val[f.main_model] ? val[f.main_model] : 'E',
-          },
-          specs: val.specs,
-          gallery: val.gallery,
-          variations: val.variations ? val.variations.splice(0, 40) : [],
-          warranty: val.warranty,
-          features: val.features,
-          indications: val.indications,
-          downloads: val.downloads,
-          related: val.related,
-          packages: Object.values(val.packages), // Keys only used for construction
-          /* packages: [
-            {
-              label: 'Fitting Tools',
-              model: 'A',
-              pic: 5012,
-              skus: ['123-AD', '243-BC'],
-              headers: ['color', 'size'],
-              product_info: [
-                'description', '
-                image'
-              ]
-            },
-          ],  */
-        }),
-      })
-        .then(res => {
-          console.log(res);
-          // Confirm that the POST was ok before adding variations
-          if (undefined !== res &&
-              val.variations &&
-              0 !== val.variations.length
-          ) {
-            POSTvariations(res.id, val.variations, 1).then(() => {
-              statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
-            });
-          } else {
-            statusElm.textContent = `Uploading products: ${++cnt} of ${Nprod} received`;
-          }
-        })
-        .catch(console.error);
-    });
-}
-
 //
 // TODO: Find the specs that vary across variations; Product Number Generator
 // function findVariationSpecs(variations)
 
-function processCSV(parentCSV, variationCSV, packageCSV) {
+function processCSV(parentCSV, variationCSV, packageCSV, statusElm) {
   // The first row containing attribute names will CONSTantly be referenced
   const parentAttr = parentCSV[0];
   const variationAttr = variationCSV[0];
@@ -262,26 +70,43 @@ async function init() {
   let existingProducts = null;
   let newProducts = null;
 
+  // Status is updated in several functions.
+  //    Is it okay to be global is the name is long enough to avoid collisions?
+  //    Obviously here it isn't, but I want to get around passing to every function.
+  const importerStatusElement = document.querySelector('.import_status');
+
   //* //////////////////////////////////////////////////////////////////////
   //    Pull existing products, continue
   console.log('Fetching for existing products...');
 
   // Using the '&page' query parameter, build a pagination functionality that
   //    GETs until there are no more products left.
-  //    another shoutout: https://dev.to/jackedwardlyons/how-to-get-all-wordpress-posts-from-the-wp-api-with-javascript-3j48
+  //    another shout-out: https://dev.to/jackedwardlyons/how-to-get-all-wordpress-posts-from-the-wp-api-with-javascript-3j48
 
+  importerStatusElement.textContent = 'Reading existing products...';
   await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
-    data => (existingProducts = data),
+    data => {
+      existingProducts = data;
+      importerStatusElement.textContent = `${existingProducts.length} products have been found in the WP database.`;
+      console.log(
+        `${existingProducts.length} products have been found in the WP database.`, existingProducts,
+      );
+    },
   );
-
-  console.log(
-    `${existingProducts.length} products have been found in the WP database.`,
-  );
-  console.log(existingProducts);
 
   //* //////////////////////////////////////////////////////////////////////
   //    Test POST Call
-  testBtn.addEventListener('mouseup', testCall);
+  testBtn.addEventListener('mouseup', () => {
+    importerStatusElement.textContent = 'Reading existing products...';
+    fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
+      data => {
+        existingProducts = data;
+        importerStatusElement.textContent = `${existingProducts.length} products have been found in the WP database.`;
+        console.log(
+          `${existingProducts.length} products have been found in the WP database.`, existingProducts,
+        );
+      });
+  });
 
   //* //////////////////////////////////////////////////////////////////////
   //    IMPORT EVENT
@@ -309,7 +134,8 @@ async function init() {
     ];
 
     Promise.all(readPromises).then(CSVs => {
-      newProducts = processCSV(...CSVs);
+      newProducts = processCSV(...CSVs, importerStatusElement);
+      console.log('finished processing');
     });
   });
 
@@ -318,7 +144,8 @@ async function init() {
       window.alert('Import a product sheet first');
       return false;
     }
-    POSTproducts(newProducts, existingProducts);
+    const [toDelete, toIgnore] = compareHashesForPayload(newProducts, existingProducts);
+    POSTproducts(newProducts, toDelete, toIgnore);
   });
 }
 

@@ -39,32 +39,6 @@ async function readFilePromise(fileHandler) {
   });
 }
 
-function deleteProduct(postID, verbose = false) {
-  return new Promise((resolve, reject) => {
-    if (!postID) {
-      reject(postID);
-    }
-    fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
-      method: 'delete',
-      headers: {
-        'X-WP-Nonce': wpApiSettings.nonce,
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(res => {
-        resolve(res);
-        if (verbose) console.log(res);
-      })
-      .catch(console.error);
-  });
-}
-
-function deleteProducts(prods) {
-  return prods.map(id => {
-    return deleteProduct(id, true);
-  });
-}
-
 function testCall(ev) {
   ev.preventDefault();
   // Lance magic
@@ -86,4 +60,8 @@ function testCall(ev) {
     .catch(console.log);
 }
 
-export { fetcher, deleteProducts, readFilePromise, testCall };
+function incrementProgress(elm) {
+  return elm;
+}
+
+export { fetcher, readFilePromise, testCall, incrementProgress };
