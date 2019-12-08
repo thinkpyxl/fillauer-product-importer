@@ -29,50 +29,39 @@ function deleteProducts(prods) {
 }
 
 async function POSTproduct(val) {
-  // val = verifyFields(val);   // Until this is used...
-  fetcher(`${wpApiSettings.root}wp/v2/product`, {
+  // val = verifyFields(val);   // Until this is used... If this is used...
+  const payload = JSON.stringify({
+    title: val[f.name],
+    content: val[f.desc],
+    excerpt: val[f.short_desc],
+    status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
+    terms: val.terms,
+    meta: {
+      SKU: 'simple' === val[f.type] ? val[f.sku] : '',
+      PIC: val[f.pic],
+      order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
+      product_type: val[f.type],
+      product_hash: val.checksum, // Used for finding changes between new imports and wp posts
+      main_model: val[f.main_model] ? val[f.main_model] : 'E',
+    },
+    specs: val.specs,
+    gallery: val.gallery,
+    variations: val.variations ? val.variations.splice(0, 40) : [],
+    warranty: val.warranty,
+    features: val.features,
+    indications: val.indications,
+    downloads: val.downloads,
+    related: val.related,
+    packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
+  });
+  console.log('product payload', payload);
+  return fetcher(`${wpApiSettings.root}wp/v2/product`, {
     method: 'post',
     headers: {
       'X-WP-Nonce': wpApiSettings.nonce,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      title: val[f.name],
-      content: val[f.desc],
-      excerpt: val[f.short_desc],
-      status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
-      terms: val.terms,
-      meta: {
-        SKU: 'simple' === val[f.type] ? val[f.sku] : '',
-        PIC: val[f.pic],
-        order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
-        product_type: val[f.type],
-        product_hash: val.checksum, // Used for finding changes between new imports and wp posts
-        main_model: val[f.main_model] ? val[f.main_model] : 'E',
-      },
-      specs: val.specs,
-      gallery: val.gallery,
-      variations: val.variations ? val.variations.splice(0, 40) : [],
-      warranty: val.warranty,
-      features: val.features,
-      indications: val.indications,
-      downloads: val.downloads,
-      related: val.related,
-      packages: Object.values(val.packages), // Keys only used for construction
-      /* packages: [
-            {
-              label: 'Fitting Tools',
-              model: 'A',
-              pic: 5012,
-              skus: ['123-AD', '243-BC'],
-              headers: ['color', 'size'],
-              product_info: [
-                'description', '
-                image'
-              ]
-            },
-          ],  */
-    }),
+    body: payload,
   })
     .then(res => {
       console.log(res);
@@ -81,7 +70,7 @@ async function POSTproduct(val) {
               val.variations &&
               0 !== val.variations.length
       ) {
-        POSTvariations(res.id, val.variations, 1).then(() => {
+        return POSTvariations(res.id, val.variations, 1).then(() => {
           incrementProgress();
         });
       } else {
@@ -94,10 +83,10 @@ async function POSTproduct(val) {
 async function POSTvariations(POSTid, varies, depth = 1) {
   console.log(`Posting more variations at a depth of ${depth}`);
   const payload = JSON.stringify({
-    variations: varies.splice(0, 24), // The best value for preventing large variation POST crashes
+    variations: varies.splice(0, 20),
   });
   console.log('variations payload: ', payload);
-  await fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
+  return fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
     method: 'post',
     headers: {
       'X-WP-Nonce': wpApiSettings.nonce,
@@ -106,7 +95,7 @@ async function POSTvariations(POSTid, varies, depth = 1) {
     body: payload,
 
   }).then(res => {
-    if (res && 0 !== varies.length && 30 > depth) {
+    if (res && 0 !== varies.length && 16 > depth) {
       return POSTvariations(POSTid, varies, depth + 1);
     }
   });
@@ -130,6 +119,7 @@ async function POSTproducts(prods, toDelete, toIgnore) {
   );
 
   //   statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
+  console.log('toIgnore', toIgnore, toIgnore.includes(Object.values(prods)[0][f.pic]));
   console.log('toPOST products', Object.values(prods));
   const toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
   console.log('toPOST filtered', toPOST);
@@ -139,8 +129,13 @@ async function POSTproducts(prods, toDelete, toIgnore) {
   //   return false;
   // }
 
-  toPOST
-    .map(POSTproduct);
+  while (0 < toPOST.length) {
+    console.log('posting...');
+    await POSTproduct(toPOST.splice(0, 1)[0]);
+  }
+
+  // toPOST
+  //   .map(POSTproduct);
 }
 
 export { POSTproduct, POSTproducts }

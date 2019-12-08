@@ -39,22 +39,29 @@ function update_variations( $value, $prod, $field_name ){
 		$group = array(
 			'variation_sku'  => $value['sku'],
 			'variation_name' => $value['name'],
-			'variation_image' => $value['image'],
+			'variation_image' => array_key_exists('image', $value) ? $value['image'] : '',
 			'variation_indentation' => array_key_exists('indent', $value) ? $value['indent'] : '',
 		);
 		$variation_index = add_row( 'variations', $group, $prod->ID );
 
 		// Add Specifications for each variation entry
-		foreach ( $value['specs'] as $label => $val ) {
-			add_sub_row(
-				[ 'variations', $variation_index, 'variation_specs' ],
-				[
-					'spec_label' => $label,
-					'spec_value' => $val['val'],
-					// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
-				],
-				$prod->ID
-			);
+		if(array_key_exists('specs', $value)){
+			foreach ( $value['specs'] as $label => $val ) {
+				if(array_key_exists('val', $val)){
+					add_sub_row(
+						[ 'variations', $variation_index, 'variation_specs' ],
+						[
+							'spec_label' => $label,
+							'spec_value' => $val['val'],
+							// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
+						],
+						$prod->ID
+					);
+				}
+			}
+		}
+		else{
+			error_log('Variation update fail: '.print_r($value, true));
 		}
 		$variation_index += 1;
 	}
