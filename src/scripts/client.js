@@ -4,7 +4,7 @@ import { f } from './fields.js';
 import { computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
 import { fetcher, readFilePromise } from './utils.js';
 import { POSTproducts } from './rest.js';
-import { buildProductObjs } from './products';
+import { buildProductObjs, optimizeProducts } from './products';
 
 console.log('client-side script executed');
 
@@ -49,12 +49,14 @@ function processCSV(parentCSV, variationCSV, packageCSV, statusElm) {
   const productsWithPackages = linkPackages(productsWithVariations, packageCSV);
   console.log('packaged ', productsWithPackages);
 
+  const productsOptimized = optimizeProducts(productsWithPackages);
+
   statusElm.textContent = `Products have been processed. ${
-    Object.keys(productsWithPackages).length
+    Object.keys(productsOptimized).length
   } unique PICs found`;
 
   // LAST STEP: Once all products are COMPLETELY assembled, save hash for checksum
-  const products = computeChecksum(productsWithPackages);
+  const products = computeChecksum(productsOptimized);
 
   return products;
 }
