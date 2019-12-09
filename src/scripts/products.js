@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2100' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2407' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -168,7 +168,7 @@ function dependantVariations(parent) {
     // console.log('values', values, values.specs, Object.values(values.specs));
     // values = Object.values(values.specs);
     Object.values(values.specs).forEach((val, ind, arr) => {
-      if (!specCompare[labels[ind]][val]) specCompare[labels[ind]][val] = {};
+      if (undefined === specCompare[labels[ind]][val]) specCompare[labels[ind]][val] = {};
       // A loop for going through all the OTHER spec values
       for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
         // Create new arrays at spec: val : spec level
@@ -225,7 +225,8 @@ function combineSpecs(parent) {
   parent.variations.forEach((vary, ind) => {
     vary = vary.specs;
     Object.keys(combos).forEach(base => {
-      if (2 === combos[base].length) {
+      // Otherwise, this was a product with a single Min OR Max
+      if (2 === combos[base].length && vary[combos[base][0]]) {
         const newVal = {
           featured: false,
           icon: '',
