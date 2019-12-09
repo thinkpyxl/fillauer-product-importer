@@ -102,7 +102,7 @@ async function POSTvariations(POSTid, varies, depth = 1) {
   });
 }
 
-async function POSTproducts(prods, toDelete, toIgnore) {
+async function POSTproducts(prods, toDelete, toIgnore, toIgnoreBtn) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length - toIgnore.length;
 
@@ -122,8 +122,13 @@ async function POSTproducts(prods, toDelete, toIgnore) {
   //   statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
   console.log('toIgnore', toIgnore, toIgnore.includes(Object.values(prods)[0][f.pic]));
   console.log('toPOST products', Object.values(prods));
-  // const toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
-  const toPOST = Object.values(prods); // Debug line
+
+  let toPOST;
+  if (toIgnoreBtn.checked) {
+    toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
+  } else {
+    toPOST = Object.values(prods); // Debug line
+  }
   console.log('toPOST filtered', toPOST);
 
   //  POST loop
