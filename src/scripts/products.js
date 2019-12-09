@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2407' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2072' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -104,7 +104,7 @@ function optimizeVariations(parent) {
   const varyPacks = [];
   while (0 < parent.variations.length) {
     varyPacks.push(
-      parent.variations.splice(0, 40),
+      parent.variations.splice(0, 600),
     );
   }
 
