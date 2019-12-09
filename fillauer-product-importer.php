@@ -32,36 +32,44 @@ function register_processor() {
 function update_variations( $value, $prod, $field_name ){
 	$variation_index = 1;
 
-	foreach ( $value as $key => $value ) {
+	// error_log('Variation global dump: '.print_r($value,true));
+	$spec_labels = $value['labels'];
+	foreach ( $value['varies'] as $key => $varies ) {
 		// Create Variation
 		
+		// error_log('Variation dump: '.print_r($varies, TRUE));
 		// error_log(print_r('Variation group: '.$variation_index,true));
+		if( !array_key_exists('sku', $varies) ){
+			error_log('sku not found');
+			continue;
+		}
 		$group = array(
-			'variation_sku'  => $value['sku'],
-			'variation_name' => $value['name'],
-			'variation_image' => array_key_exists('image', $value) ? $value['image'] : '',
-			'variation_indentation' => array_key_exists('indent', $value) ? $value['indent'] : '',
+			'variation_sku'  => $varies['sku'],
+			'variation_name' => $varies['name'],
+			'variation_image' => array_key_exists('image', $varies) ? $varies['image'] : '',
+			'variation_indentation' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
 		);
 		$variation_index = add_row( 'variations', $group, $prod->ID );
-
+		if($variation_index > 8 && $variation_index % 10 === 0){
+					error_log('Variation load: '.print_r($variation_index, TRUE));
+		}
 		// Add Specifications for each variation entry
-		if(array_key_exists('specs', $value)){
-			foreach ( $value['specs'] as $label => $val ) {
-				if(array_key_exists('val', $val)){
-					add_sub_row(
-						[ 'variations', $variation_index, 'variation_specs' ],
-						[
-							'spec_label' => $label,
-							'spec_value' => $val['val'],
-							// 'spec_icon'  => $val['icon']   // Not used unless varying specs use an icon
-						],
-						$prod->ID
-					);
-				}
+		if(array_key_exists('specs', $varies)){
+
+			foreach ( $varies['specs'] as $index => $val ) {
+				// return true;
+				add_sub_row(
+					[ 'variations', $variation_index, 'variation_specs' ],
+					[
+						'spec_label' => $spec_labels[$index],
+						'spec_value' => $val,
+					],
+					$prod->ID
+				);
 			}
 		}
 		else{
-			error_log('Variation update fail: '.print_r($value, true));
+			error_log('Variation update fail: '.print_r($varies, true));
 		}
 		$variation_index += 1;
 	}

@@ -1,4 +1,5 @@
 
+import { variationSlice } from './filters';
 import { fetcher, incrementProgress } from './utils.js';
 import { f } from './fields';
 
@@ -46,7 +47,7 @@ async function POSTproduct(val) {
     },
     specs: val.specs,
     gallery: val.gallery,
-    variations: val.variations ? val.variations.splice(0, 40) : [],
+    variations: val.variations ? variationSlice(val.variations, 0) : [], // .splice(0, 40) : [],
     warranty: val.warranty,
     features: val.features,
     indications: val.indications,
@@ -54,7 +55,7 @@ async function POSTproduct(val) {
     related: val.related,
     packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
   });
-  console.log('product payload', payload);
+  // console.log('product payload', payload);
   return fetcher(`${wpApiSettings.root}wp/v2/product`, {
     method: 'post',
     headers: {
@@ -68,7 +69,7 @@ async function POSTproduct(val) {
       // Confirm that the POST was ok before adding variations
       if (undefined !== res &&
               val.variations &&
-              0 !== val.variations.length
+              1 < val.variations.varies.length
       ) {
         return POSTvariations(res.id, val.variations, 1).then(() => {
           incrementProgress();
@@ -83,9 +84,9 @@ async function POSTproduct(val) {
 async function POSTvariations(POSTid, varies, depth = 1) {
   console.log(`Posting more variations at a depth of ${depth}`);
   const payload = JSON.stringify({
-    variations: varies.splice(0, 20),
+    variations: variationSlice(varies, depth),
   });
-  console.log('variations payload: ', payload);
+  // console.log('variations payload: ', payload);
   return fetcher(`${wpApiSettings.root}wp/v2/product/${POSTid}`, {
     method: 'post',
     headers: {
@@ -95,7 +96,7 @@ async function POSTvariations(POSTid, varies, depth = 1) {
     body: payload,
 
   }).then(res => {
-    if (res && 0 !== varies.length && 16 > depth) {
+    if (res && depth + 1 !== varies.varies.length && 16 > depth) {
       return POSTvariations(POSTid, varies, depth + 1);
     }
   });
@@ -121,21 +122,15 @@ async function POSTproducts(prods, toDelete, toIgnore) {
   //   statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
   console.log('toIgnore', toIgnore, toIgnore.includes(Object.values(prods)[0][f.pic]));
   console.log('toPOST products', Object.values(prods));
-  const toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
+  // const toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
+  const toPOST = Object.values(prods); // Debug line
   console.log('toPOST filtered', toPOST);
 
-  // if (toIgnore.includes(val[f.pic])) {
-  //   console.log('This product should not be uploaded');
-  //   return false;
-  // }
-
+  //  POST loop
   while (0 < toPOST.length) {
     console.log('posting...');
     await POSTproduct(toPOST.splice(0, 1)[0]);
   }
-
-  // toPOST
-  //   .map(POSTproduct);
 }
 
 export { POSTproduct, POSTproducts }

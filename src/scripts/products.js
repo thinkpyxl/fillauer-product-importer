@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2204' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -81,5 +81,48 @@ function buildProductObjs(attrRow, rows) {
   return products.filter(prod => prod !== undefined);
 }
 
-export { buildProductObjs }
-;
+function optimizeVariations(parent) {
+  // Since variations are built the same way as products,
+  //   we must use trim away unused data from variations for slimmer POSTs
+
+  // Before anything, test how well simply removing icon and featured works
+
+  const specLabels = [];
+  parent.variations = parent.variations.map((vary) => {
+    const specValues = {};
+    Object.keys(vary.specs).forEach(specLabel => {
+      let specIndex = specLabels.indexOf(specLabel);
+      specIndex = -1 === specIndex ? specLabels.push(specLabel) - 1 : specIndex;
+      specValues[specIndex] = vary.specs[specLabel].val;
+      // vary.specs[specLabel] = vary.specs[specLabel].val;
+    });
+    vary.specs = specValues; // Wipe out specs and replace with the diet program
+    return vary;
+  });
+
+  const varyPacks = [];
+  while (0 < parent.variations.length) {
+    varyPacks.push(
+      parent.variations.splice(0, 40),
+    );
+  }
+
+  parent.variations = {
+    varies: varyPacks,
+    labels: specLabels,
+  };
+
+  // Break up varies
+
+  return parent;
+}
+
+function optimizeProducts(parents) {
+  // Reformat variation object for lighter specs overhead
+  Object.keys(parents).forEach(key => {
+    parents[key] = optimizeVariations(parents[key]);
+  });
+  return parents;
+}
+
+export { buildProductObjs, optimizeProducts };

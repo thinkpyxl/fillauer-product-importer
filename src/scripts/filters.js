@@ -142,14 +142,18 @@ function linkVariations(parents, varies) {
   varies.map(val => {
     if (undefined === parents[val[f.pic]]) return false;
 
-    parents[val[f.pic]].variations.push({
+    const varN = parents[val[f.pic]].variations.push({
       name: val[f.name],
       sku: val[f.sku],
-      image: val[f.image] ? val[f.image] : false,
-      indent: val[f.indent] ? val[f.indent] : '',
-      specs: val.specs,
-      package: val[f.package],
+      // image: val[f.image] ? val[f.image] : false,
+      // indent: val[f.indent] ? val[f.indent] : '',
+      specs: val.specs, // This is too heavy
+      // package: val[f.package],
     });
+    // Undefined is better for payload size
+    if (val[f.image]) { parents[val[f.pic]].variations[varN - 1].image = val[f.image]; console.log('has image') ;};
+    if (val[f.indent]) { parents[val[f.pic]].variations[varN - 1].indent = val[f.indent]; };
+    if (val[f.package]) { parents[val[f.pic]].variations[varN - 1].package = val[f.package]; };
   });
 
   return parents;
@@ -336,4 +340,12 @@ function buildSpec(start, end, ind, val, icon) {
   return false;
 }
 
-export { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec };
+function variationSlice(varyPack, i) {
+  const rv = {
+    varies: varyPack.varies[i],
+    labels: varyPack.labels,
+  };
+  return rv;
+}
+
+export { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec, variationSlice };
