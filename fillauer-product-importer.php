@@ -30,50 +30,66 @@ function register_processor() {
 }
 
 function update_variations( $value, $prod, $field_name ){
-	$variation_index = 1;
+
+	// New JSON
+	/*
+		variations = [
+			{
+				sku: 143-342-AC
+				name: 'asdf'
+				image: false
+				indent: ''
+				specs: {
+					color: 'blue',
+					weight: '10 g'
+				}
+			},
+			{
+				sku: 143-342-DF
+				name: 'fdsa'
+				image: 424
+				indent: ''
+				specs: {
+					color: 'red',
+					weight: '8 g'
+				}
+			}
+		]
+	*/
 
 	// error_log('Variation global dump: '.print_r($value,true));
 	$spec_labels = $value['labels'];
+  $json = array();
 	foreach ( $value['varies'] as $key => $varies ) {
 		// Create Variation
 		
-		// error_log('Variation dump: '.print_r($varies, TRUE));
-		// error_log(print_r('Variation group: '.$variation_index,true));
 		if( !array_key_exists('sku', $varies) ){
 			error_log('sku not found');
 			continue;
 		}
 		$group = array(
-			'variation_sku'  => $varies['sku'],
-			'variation_name' => $varies['name'],
-			'variation_image' => array_key_exists('image', $varies) ? $varies['image'] : '',
-			'variation_indentation' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
+			'sku'  => $varies['sku'],
+			'name' => $varies['name'],
+			'image' => array_key_exists('image', $varies) ? $varies['image'] : false,
+			'indent' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
+			'specs' => [],
 		);
-		$variation_index = add_row( 'variations', $group, $prod->ID );
-		if($variation_index > 8 && $variation_index % 10 === 0){
-					error_log('Variation load: '.print_r($variation_index, TRUE));
-		}
+
 		// Add Specifications for each variation entry
 		if(array_key_exists('specs', $varies)){
 
 			foreach ( $varies['specs'] as $index => $val ) {
 				// return true;
 				if($val === '') continue;
-				add_sub_row(
-					[ 'variations', $variation_index, 'variation_specs' ],
-					[
-						'spec_label' => $spec_labels[$index],
-						'spec_value' => $val,
-					],
-					$prod->ID
-				);
+				$group['specs'][$spec_labels[$index]] = $val;
 			}
 		}
 		else{
 			error_log('Variation update fail: '.print_r($varies, true));
 		}
-		$variation_index += 1;
+		array_push( $json, $group );
 	}
+	update_field( 'variation_json', json_encode($json), $prod->ID );
 	return true;
 };
 
