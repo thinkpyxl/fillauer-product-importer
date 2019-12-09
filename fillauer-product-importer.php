@@ -58,6 +58,7 @@ function update_variations( $value, $prod, $field_name ){
 
 			foreach ( $varies['specs'] as $index => $val ) {
 				// return true;
+				if($val === '') continue;
 				add_sub_row(
 					[ 'variations', $variation_index, 'variation_specs' ],
 					[

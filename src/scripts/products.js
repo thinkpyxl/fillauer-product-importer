@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    if ('2051' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2100' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -183,7 +183,7 @@ function dependantVariations(parent) {
       }
     });
   });
-  console.log(specCompare);
+  console.log('Dependant Specifications', specCompare);
   return parent;
 }
 
@@ -202,30 +202,57 @@ function includesAny(subject, arr) {
   });
   return [mod, base];
 }
+
+// Spec labels are pulled from just the first variation.
 function combineSpecs(parent) {
   const combos = {};
   const searchFor = ['Minimum', 'Maximum', 'Min', 'Max', 'min', 'max'];
-  parent.variations.labels.forEach((label, ind, arr) => {
+
+  // Min/Max combos ->  min - max
+  Object.keys(parent.variations[0].specs).forEach((label, ind, arr) => {
     const [mod, base] = includesAny(label, searchFor);
     if (mod) {
       // Attach to base pair which I check to see exists first
-      if (!combos[base]) combos[base] = {};
-      combos[base][mod] = label;
+      if (!combos[base]) combos[base] = [];
+      combos[base].push(label);
     }
-    // for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
-    //   if label
-    // }
   });
-  console.log('combine specifications:', combos);
+
+  // console.log('combine specifications:', combos);
+
+  // Apply min/max combinations
+  //   For every variations... on each combo... the value of combined fields
+  parent.variations.forEach((vary, ind) => {
+    vary = vary.specs;
+    Object.keys(combos).forEach(base => {
+      if (2 === combos[base].length) {
+        const newVal = {
+          featured: false,
+          icon: '',
+          val: `${vary[combos[base][0]].val} - ${vary[combos[base][1]].val}`,
+        };
+        // Set other variations to delete
+        vary[combos[base][0]].val = '';
+        vary[combos[base][1]].val = '';
+        vary[base] = newVal;
+        parent.variations[ind].specs = vary; // Remember vary was set to specs
+      }
+    });
+  });
+
+  // TODO: Unit combinations
+
   return parent;
 }
 
 function optimizeProducts(parents) {
   // Reformat variation object for lighter specs overhead
   Object.keys(parents).forEach(key => {
-    parents[key] = optimizeVariations(parents[key]);
-    parents[key] = dependantVariations(parents[key]);
     parents[key] = combineSpecs(parents[key]);
+    // console.log(parents[key]);
+    parents[key] = optimizeVariations(parents[key]);
+    // console.log(parents[key]);
+    parents[key] = dependantVariations(parents[key]);
   });
   return parents;
 }
