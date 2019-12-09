@@ -147,7 +147,9 @@ async function init() {
       return false;
     }
     const [toDelete, toIgnore] = compareHashesForPayload(newProducts, existingProducts);
-    POSTproducts(newProducts, toDelete, toIgnore);
+    POSTproducts(newProducts, toDelete, toIgnore).then(() => {
+      importerStatusElement.textContent = 'Products have finished uploading.';
+    });
   });
 }
 

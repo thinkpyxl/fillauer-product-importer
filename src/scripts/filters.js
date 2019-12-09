@@ -145,13 +145,10 @@ function linkVariations(parents, varies) {
     const varN = parents[val[f.pic]].variations.push({
       name: val[f.name],
       sku: val[f.sku],
-      // image: val[f.image] ? val[f.image] : false,
-      // indent: val[f.indent] ? val[f.indent] : '',
-      specs: val.specs, // This is too heavy
-      // package: val[f.package],
+      specs: val.specs, // This is too heavy optimizeVariations transforms later
     });
     // Undefined is better for payload size
-    if (val[f.image]) { parents[val[f.pic]].variations[varN - 1].image = val[f.image]; console.log('has image') ;};
+    if (val[f.image]) { parents[val[f.pic]].variations[varN - 1].image = val[f.image]; console.log('has image'); };
     if (val[f.indent]) { parents[val[f.pic]].variations[varN - 1].indent = val[f.indent]; };
     if (val[f.package]) { parents[val[f.pic]].variations[varN - 1].package = val[f.package]; };
   });

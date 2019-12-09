@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2204' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2051' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -84,8 +84,9 @@ function buildProductObjs(attrRow, rows) {
 function optimizeVariations(parent) {
   // Since variations are built the same way as products,
   //   we must use trim away unused data from variations for slimmer POSTs
-
-  // Before anything, test how well simply removing icon and featured works
+  if (undefined === parent.variations) {
+    return parent;
+  }
 
   const specLabels = [];
   parent.variations = parent.variations.map((vary) => {
@@ -117,10 +118,62 @@ function optimizeVariations(parent) {
   return parent;
 }
 
+function dependantVariations(parent) {
+  /*
+  specComp = {
+    size: {
+      22: {
+        min: 40, 50, 60,
+        max: 49, 59, 69,
+        maxK:19, 29, 39,
+      }
+      23: {
+        min:  40, 50, 60,
+        max:  49, 59, 69,
+        maxK: 19, 29, 39,
+      }
+    }
+    min: {
+      40: {
+        size: 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        max:  49  // If there is only one possible, link min-max-maxK
+        maxK: 19
+      }
+    }
+    max: {
+      49: {
+        size: 22, 23, 24, 25, 26, 27, 28, 29, 30,
+        min:  40,
+        maxK: 19,
+      }
+    }
+    maxK
+    minK
+  }
+  */
+  const specCompare = {};
+  parent.variations.labels.forEach((label, ind, arr) => {
+    console.log(label);
+    specCompare[label] = {};
+
+    for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
+      console.log(`   ${arr[i]}`);
+    }
+  });
+  // varies = [values] and the corresponding label sharing index
+  // parent.variations.varies.forEach((values, ind, arr) => {
+  //   values.forEach((val, ind) => {
+
+  //   });
+  // });
+  return parent;
+}
+
 function optimizeProducts(parents) {
   // Reformat variation object for lighter specs overhead
   Object.keys(parents).forEach(key => {
     parents[key] = optimizeVariations(parents[key]);
+    parents[key] = dependantVariations(parents[key]);
   });
   return parents;
 }
