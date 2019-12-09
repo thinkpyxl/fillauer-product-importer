@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2051' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    if ('2051' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -136,7 +136,7 @@ function dependantVariations(parent) {
     min: {
       40: {
         size: 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        max:  49  // If there is only one possible, link min-max-maxK
+        max:  49             // If there is only one possible, link min-max-maxK
         maxK: 19
       }
     }
@@ -152,20 +152,71 @@ function dependantVariations(parent) {
   }
   */
   const specCompare = {};
-  parent.variations.labels.forEach((label, ind, arr) => {
-    console.log(label);
-    specCompare[label] = {};
+  const labels = parent.variations.labels;
+  const variationValues = parent.variations.varies[0];
+  // TODO: Add support for multiple variation packs. Only [0] at the moment
+  // I Know, a bigO(n^2), but it could be worse...
 
-    for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
-      console.log(`   ${arr[i]}`);
+  labels.forEach((label, ind, arr) => {
+    specCompare[label] = {};
+  });
+
+  // varies = [values] and the corresponding label sharing index
+  console.log(parent.variations);
+
+  Object.values(variationValues).forEach((values, pairIndex) => {
+    // console.log('values', values, values.specs, Object.values(values.specs));
+    // values = Object.values(values.specs);
+    Object.values(values.specs).forEach((val, ind, arr) => {
+      if (!specCompare[labels[ind]][val]) specCompare[labels[ind]][val] = {};
+      // A loop for going through all the OTHER spec values
+      for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
+        // Create new arrays at spec: val : spec level
+        if (undefined === specCompare[labels[ind]][val][labels[i]]) {
+          specCompare[labels[ind]][val][labels[i]] = [];
+        }
+        // Only add unique values to the matrix
+        if (!specCompare[labels[ind]][val][labels[i]].includes(arr[i])) {
+          // Different spec values at the same variation
+          specCompare[labels[ind]][val][labels[i]].push(arr[i]);
+        }
+      }
+    });
+  });
+  console.log(specCompare);
+  return parent;
+}
+
+/*
+Either combining minimum/maximums with dash '-'
+  or appending different units into one
+*/
+function includesAny(subject, arr) {
+  let mod = false;
+  let base = '';
+  arr.forEach(val => {
+    if (subject.includes(val) && !mod) {
+      mod = val;
+      base = subject.replace(mod, '').trim();
     }
   });
-  // varies = [values] and the corresponding label sharing index
-  // parent.variations.varies.forEach((values, ind, arr) => {
-  //   values.forEach((val, ind) => {
-
-  //   });
-  // });
+  return [mod, base];
+}
+function combineSpecs(parent) {
+  const combos = {};
+  const searchFor = ['Minimum', 'Maximum', 'Min', 'Max', 'min', 'max'];
+  parent.variations.labels.forEach((label, ind, arr) => {
+    const [mod, base] = includesAny(label, searchFor);
+    if (mod) {
+      // Attach to base pair which I check to see exists first
+      if (!combos[base]) combos[base] = {};
+      combos[base][mod] = label;
+    }
+    // for (let i = (ind + 1) % arr.length; i !== ind; i = (i + 1) % arr.length) {
+    //   if label
+    // }
+  });
+  console.log('combine specifications:', combos);
   return parent;
 }
 
@@ -174,6 +225,7 @@ function optimizeProducts(parents) {
   Object.keys(parents).forEach(key => {
     parents[key] = optimizeVariations(parents[key]);
     parents[key] = dependantVariations(parents[key]);
+    parents[key] = combineSpecs(parents[key]);
   });
   return parents;
 }
