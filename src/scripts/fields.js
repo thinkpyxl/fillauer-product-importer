@@ -27,6 +27,7 @@ const f = {
   indict: 'Indications',
   downs: 'Downloads',
   main_model: 'Main Model',
+  pnf: 'In Part Number Finder',
 };
 
 export { f };

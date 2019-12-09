@@ -44,6 +44,7 @@ async function POSTproduct(val) {
       product_type: val[f.type],
       product_hash: val.checksum, // Used for finding changes between new imports and wp posts
       main_model: val[f.main_model] ? val[f.main_model] : 'E',
+      pnf: val[f.pnf] ? '1' === val[f.pnf] : false,
     },
     specs: val.specs,
     gallery: val.gallery,
