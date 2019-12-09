@@ -69,6 +69,7 @@ async function init() {
   const variationFileInput = document.querySelector('#variation_file_input');
   const packageFileInput = document.querySelector('#package_file_input');
   const testBtn = document.querySelector('#test_button');
+  const ignoreBtn = document.querySelector('#ignore_button');
   let existingProducts = null;
   let newProducts = null;
 
@@ -147,7 +148,9 @@ async function init() {
       return false;
     }
     const [toDelete, toIgnore] = compareHashesForPayload(newProducts, existingProducts);
-    POSTproducts(newProducts, toDelete, toIgnore);
+    POSTproducts(newProducts, toDelete, toIgnore, ignoreBtn).then(() => {
+      importerStatusElement.textContent = 'Products have finished uploading.';
+    });
   });
 }
 

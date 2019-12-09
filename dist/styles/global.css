@@ -2,4 +2,8 @@ input[type='file'] {
   width: 600px;
 }
 
-/*# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImdsb2JhbC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0EsWUFBQTtBQUFBIiwiZmlsZSI6Imdsb2JhbC5jc3MiLCJzb3VyY2VzQ29udGVudCI6WyJpbnB1dFt0eXBlPSdmaWxlJ10ge1xuICB3aWR0aDogNjAwcHg7XG59XG4iXX0= */
+.form-field {
+  margin: 1em;
+}
+
+/*# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImdsb2JhbC5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0VBQ0EsWUFBQTtBQUFBOztBQUVBO0VBQ0EsV0FBQTtBQUFBIiwiZmlsZSI6Imdsb2JhbC5jc3MiLCJzb3VyY2VzQ29udGVudCI6WyJpbnB1dFt0eXBlPSdmaWxlJ10ge1xuICB3aWR0aDogNjAwcHg7XG59XG4uZm9ybS1maWVsZHtcbiAgbWFyZ2luOiAxZW07XG59XG4iXX0= */
