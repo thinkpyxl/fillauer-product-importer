@@ -44,7 +44,7 @@ async function POSTproduct(val) {
       product_type: val[f.type],
       product_hash: val.checksum, // Used for finding changes between new imports and wp posts
       main_model: val[f.main_model] ? val[f.main_model] : 'E',
-      pnf: val[f.pnf] ? '1' === val[f.pnf] : false,
+      part_number_finder: val[f.pnf] ? '1' === val[f.pnf] : false,
     },
     specs: val.specs,
     gallery: val.gallery,
@@ -103,7 +103,7 @@ async function POSTvariations(POSTid, varies, depth = 1) {
   });
 }
 
-async function POSTproducts(prods, toDelete, toIgnore, toIgnoreBtn) {
+async function POSTproducts(prods, toDelete, toIgnore, toIgnoreBtn, statusElm) {
   // return console.log(Object.values(prods))
   const Nprod = Object.keys(prods).length - toIgnore.length;
 
@@ -135,6 +135,7 @@ async function POSTproducts(prods, toDelete, toIgnore, toIgnoreBtn) {
   //  POST loop
   while (0 < toPOST.length) {
     console.log('posting...');
+    statusElm.textContent = `Uploading products: ${toPOST.length} remaining...`;
     await POSTproduct(toPOST.splice(0, 1)[0]);
   }
 }
