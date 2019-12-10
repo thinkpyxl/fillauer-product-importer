@@ -154,6 +154,7 @@ function dependantVariations(parent) {
   const specCompare = {};
   const labels = parent.variations.labels;
   const variationValues = parent.variations.varies[0];
+  if (undefined === variationValues || null === variationValues) return parent;
   // TODO: Add support for multiple variation packs. Only [0] at the moment
   // I Know, a bigO(n^2), but it could be worse...
 

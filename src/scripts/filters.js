@@ -141,6 +141,7 @@ function linkVariations(parents, varies) {
 
   varies.map(val => {
     if (undefined === parents[val[f.pic]]) return false;
+    if (undefined === parents[val[f.sku]]) return false;
 
     const varN = parents[val[f.pic]].variations.push({
       name: val[f.name],
