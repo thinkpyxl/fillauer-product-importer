@@ -209,6 +209,7 @@ function combineSpecs(parent) {
   const searchFor = ['Minimum', 'Maximum', 'Min', 'Max', 'min', 'max'];
 
   // Min/Max combos ->  min - max
+  if (parent.variations[0] === undefined) { return parent; }
   Object.keys(parent.variations[0].specs).forEach((label, ind, arr) => {
     const [mod, base] = includesAny(label, searchFor);
     if (mod) {
