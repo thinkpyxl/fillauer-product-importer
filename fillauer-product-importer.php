@@ -71,7 +71,7 @@ function update_variations( $value, $prod, $field_name ){
 			'sku'  => $varies['sku'],
 			'name' => $varies['name'],
 			'image' => array_key_exists('image', $varies) ? $varies['image'] : false,
-			'indent' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
+			'indention' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
 			'specs' => [],
 		);
 
@@ -81,7 +81,11 @@ function update_variations( $value, $prod, $field_name ){
 			foreach ( $varies['specs'] as $index => $val ) {
 				// return true;
 				if($val === '') continue;
-				$group['specs'][$spec_labels[$index]] = $val;
+				$spec = [
+					'spec_label' => $spec_labels[$index],
+					'spec_value' => $val
+				];
+				array_push($group['specs'], $spec);
 			}
 		}
 		else{
