@@ -154,7 +154,6 @@ function dependantVariations(parent) {
   const specCompare = {};
   const labels = parent.variations.labels;
   const variationValues = parent.variations.varies[0];
-  if (undefined === variationValues || null === variationValues) return parent;
   // TODO: Add support for multiple variation packs. Only [0] at the moment
   // I Know, a bigO(n^2), but it could be worse...
 
@@ -210,7 +209,7 @@ function combineSpecs(parent) {
   const searchFor = ['Minimum', 'Maximum', 'Min', 'Max', 'min', 'max'];
 
   // Min/Max combos ->  min - max
-  if (parent.variations[0] === undefined) { return parent; }
+  if (parent.variations[0] === undefined) { console.log('Has no variations?', parent); }
   Object.keys(parent.variations[0].specs).forEach((label, ind, arr) => {
     const [mod, base] = includesAny(label, searchFor);
     if (mod) {
