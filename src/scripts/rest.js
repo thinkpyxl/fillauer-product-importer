@@ -3,12 +3,13 @@ import { variationSlice } from './filters';
 import { fetcher, incrementProgress } from './utils.js';
 import { f } from './fields';
 
+// Delete a product, ?force to ensure permanent deletion
 function deleteProduct(postID, verbose = false) {
   return new Promise((resolve, reject) => {
     if (!postID) {
       reject(postID);
     }
-    fetch(`${wpApiSettings.root}wp/v2/product/${postID}`, {
+    fetch(`${wpApiSettings.root}wp/v2/product/${postID}?force=true`, {
       method: 'delete',
       headers: {
         'X-WP-Nonce': wpApiSettings.nonce,
@@ -31,20 +32,20 @@ function deleteProducts(prods) {
 
 async function POSTproduct(val) {
   // val = verifyFields(val);   // Until this is used... If this is used...
-  const payload = JSON.stringify({
+  const payload = {
     title: val[f.name],
     content: val[f.desc],
     excerpt: val[f.short_desc],
-    status: 'visible' === val[f.visibility] ? 'publish' : 'draft',
+    status: val[f.visibility],
     terms: val.terms,
     meta: {
-      SKU: 'simple' === val[f.type] ? val[f.sku] : '',
+      SKU: val[f.sku],
       PIC: val[f.pic],
-      order_info: val[f.orderInfo] ? val[f.orderInfo] : '',
+      order_info: val[f.orderInfo],
       product_type: val[f.type],
       product_hash: val.checksum, // Used for finding changes between new imports and wp posts
-      main_model: val[f.main_model] ? val[f.main_model] : 'E',
-      part_number_finder: val[f.pnf] ? '1' === val[f.pnf] : false,
+      main_model: val[f.main_model],
+      part_number_finder: val[f.pnf],
     },
     specs: val.specs,
     gallery: val.gallery,
@@ -55,7 +56,8 @@ async function POSTproduct(val) {
     downloads: val.downloads,
     related: val.related,
     packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
-  });
+  };
+
   // console.log('product payload', payload);
   return fetcher(`${wpApiSettings.root}wp/v2/product`, {
     method: 'post',
@@ -63,7 +65,7 @@ async function POSTproduct(val) {
       'X-WP-Nonce': wpApiSettings.nonce,
       'Content-Type': 'application/json',
     },
-    body: payload,
+    body: JSON.stringify(payload),
   })
     .then(res => {
       console.log(res);
