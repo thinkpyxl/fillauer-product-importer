@@ -47,7 +47,7 @@ function buildProductObjs(attrRow, rows) {
 
     // Gallery
     product.gallery = product[f.image] ? product[f.image]
-      .split(',').map(item => item.trim()) : [];
+      .split(',').map(item => item.trim()) : ['1005'];
 
     // Features
     product.features = product[f.feats] ? product[f.feats]
@@ -72,6 +72,23 @@ function buildProductObjs(attrRow, rows) {
         url: product[f.downs][i + 1],
       });
     }
+
+    /// * //////////////////////////////////////////////////
+    //    Field Defaults prior to checksum
+
+    // SKU field defined regardless
+    product[f.sku] = 'simple' === product[f.type] ? product[f.sku] : '';
+
+    // Order field
+    product[f.orderInfo] = product[f.orderInfo] ? product[f.orderInfo] : '';
+
+    // Main Model field
+    product[f.main_model] = product[f.main_model] ? product[f.main_model] : 'E';
+
+    // Part Number Field toggle field
+    product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
+
+    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
 
     // Ignore blank rows or incomplete products
     if (product !== undefined && product[f.name] && product[f.pic]) {
