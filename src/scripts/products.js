@@ -32,11 +32,12 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2051' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2052' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
-    product.terms.product_cat = [product[f.cat]];
+    product.terms.product_cat = product[f.cat] ? product[f.cat]
+      .split('::').map(term => term.trim()) : [];
     product.terms.product_tag = product[f.tag] ? product[f.tag]
       .split(',').map(term => term.trim()) : [];
 

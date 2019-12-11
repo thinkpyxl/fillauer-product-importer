@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.5.3
+ * Version: 1.5.4
  */
 
 
@@ -243,32 +243,34 @@ function update_taxonomies( $value, $prod, $field_name ) {
 
 			// Checks that hierarchal terms exist before associating with product.
 			if ( 'product_cat' === $key ) {
-				$terms = explode( '>', $val[0] );
-				if ( ! empty( $terms ) ) {
-					$parent_term = '';
-					$insert = [];
-					foreach ( $terms as $term ) {
-						$term = trim( $term );
-						if ( ! term_exists( $term, 'product_cat' ) ) {
-							$args = [];
-							// If parent is not empty creates this term as a child of the parent.
-							if ( ! empty( $parent_term ) ) {
-								$parent_term = get_term_by( 'name', $parent_term, 'product_cat' );
-								$args = [
-									'parent' => $parent_term->term_id,
-								];
+				foreach ($val as $cat){
+					$terms = explode( '>', $cat );
+					if ( ! empty( $terms ) ) {
+						$parent_term = '';
+						$insert = [];
+						foreach ( $terms as $term ) {
+							$term = trim( $term );
+							if ( ! term_exists( $term, 'product_cat' ) ) {
+								$args = [];
+								// If parent is not empty creates this term as a child of the parent.
+								if ( ! empty( $parent_term ) ) {
+									$parent_term = get_term_by( 'name', $parent_term, 'product_cat' );
+									$args = [
+										'parent' => $parent_term->term_id,
+									];
+								}
+
+								// Inserts the term.
+								wp_insert_term( $term, 'product_cat', $args );
 							}
+							$term_object = get_term_by( 'name', $term, 'product_cat' );
 
-							// Inserts the term.
-							wp_insert_term( $term, 'product_cat', $args );
+							$insert[]    = $term_object->term_id;
+							$parent_term = $term;
 						}
-						$term_object = get_term_by( 'name', $term, 'product_cat' );
-
-						$insert[]    = $term_object->term_id;
-						$parent_term = $term;
+						// Attaches all terms at once.
+						wp_set_object_terms( $prod->ID, $insert, $key, true);
 					}
-					// Attaches all terms at once.
-					wp_set_object_terms( $prod->ID, $insert, $key );
 				}
 			} else {
 				// Just attach it to this product.
