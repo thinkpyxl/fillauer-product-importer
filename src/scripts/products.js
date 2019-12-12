@@ -32,7 +32,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2052' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -78,7 +78,7 @@ function buildProductObjs(attrRow, rows) {
     //    Field Defaults prior to checksum
 
     // SKU field defined regardless
-    product[f.sku] = 'simple' === product[f.type] ? product[f.sku] : '';
+    product[f.sku] = product[f.sku] ? product[f.sku] : '';
 
     // Order field
     product[f.orderInfo] = product[f.orderInfo] ? product[f.orderInfo] : '';
