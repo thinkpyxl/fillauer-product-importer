@@ -180,7 +180,6 @@ function dependantVariations(parent) {
   });
 
   // varies = [values] and the corresponding label sharing index
-  console.log(parent.variations);
 
   Object.values(variationValues).forEach((values, pairIndex) => {
     // console.log('values', values, values.specs, Object.values(values.specs));
@@ -201,7 +200,6 @@ function dependantVariations(parent) {
       }
     });
   });
-  console.log('Dependant Specifications', specCompare);
   return parent;
 }
 
