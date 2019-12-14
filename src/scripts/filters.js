@@ -46,32 +46,38 @@ function computeChecksum(prods) {
   return prods;
 }
 
-function compareHashesForPayload(newProds, existing) {
-  if (!existing) return [];
-  const toIgnore = [];
-  const toDelete = Object.values(existing)
-    .map(wpProd => {
-      if (newProds[wpProd.meta.PIC]) {
-        console.log(`Existing product found, comparing hash for ${wpProd.title.rendered}`);
-        if (String(newProds[wpProd.meta.PIC].checksum) !== String(wpProd.meta.product_hash)) {
-          console.log(`Hashes differ, staging for delete.
-            ${newProds[wpProd.meta.PIC].checksum} vs ${wpProd.meta.product_hash}`);
-          return wpProd.id;
-        } else {
-          // Hashes match so don't re-upload without new product changes
-          console.log('Ignoring', wpProd.title.rendered);
-          toIgnore.push(wpProd.meta.PIC[0]);
-        }
-      } else {
-        // Nothing to delete, completely new product
+function filterExisting(data) {
+  const existingHashes = {};
+  data.forEach(WPprod => {
+    try {
+      existingHashes[WPprod.meta.PIC[0]] = {
+        id: WPprod.id,
+        checksum: String(WPprod.meta.product_hash[0]),
+      };
+    } catch { console.log(`ID:${WPprod.id} is not a legitimate product :(`); }
+  });
+  return existingHashes;
+}
+
+function compareHashesForPayload(newProds, existing, updating = true) {
+  if (!existing) return [[], Object.keys(newProds)];
+  const toPost = [];
+
+  if (updating) {
+  // If this is an update, consider checksums for unchanged products
+    toPost.push(...Object.keys(newProds).map(pic => {
+      if (existing[pic] && existing[pic].checksum === newProds[pic].checksum) {
         return false;
       }
-    })
-    .filter(val => {
-      if (val) return true;
-    });
-  console.log(toDelete);
-  return [toDelete, toIgnore];
+      return pic;
+    }).filter(val => false !== val));
+  } else {
+    // Otherwise, post everything found
+    toPost.push(...Object.keys(newProds));
+  }
+  // For every product that'll be posted, find its possible corresponding post in WP to delete
+  const toDelete = toPost.filter(pic => undefined !== existing[pic]).map(pic => existing[pic].id);
+  return [toDelete, toPost];
 }
 
 function keyByPIC(prods) {
@@ -345,4 +351,4 @@ function variationSlice(varyPack, i) {
   return rv;
 }
 
-export { findSpecBounds, findSpecIcons, computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec, variationSlice };
+export { findSpecBounds, findSpecIcons, computeChecksum, filterExisting, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles, buildSpec, variationSlice };

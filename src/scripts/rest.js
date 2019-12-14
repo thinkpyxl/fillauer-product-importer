@@ -3,6 +3,34 @@ import { variationSlice } from './filters';
 import { fetcher, incrementProgress } from './utils.js';
 import { f } from './fields';
 
+async function getExistingProducts() {
+  const pages = [];
+  let crntPage, pagesN;
+  crntPage = 1;
+  pagesN = 20;
+
+  // Fetch first page to find total pages
+  pages.push(
+    ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=1`)
+      .then(res => {
+        pagesN = res.headers.get('x-wp-totalpages');
+        console.log(`Total Pages: ${pagesN}`);
+        return res.json();
+      })
+      .catch(console.error),
+  );
+
+  // Fetch the rest of pages
+  while (crntPage++ < pagesN) {
+    pages.push(
+      ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=${crntPage}`)
+        .then(res => res.json())
+        .catch(err => console.error(err, pages)),
+    );
+  }
+  return pages;
+}
+
 // Delete a product, ?force to ensure permanent deletion
 function deleteProduct(postID, verbose = false) {
   return new Promise((resolve, reject) => {
@@ -105,42 +133,22 @@ async function POSTvariations(POSTid, varies, depth = 1) {
   });
 }
 
-async function POSTproducts(prods, toDelete, toIgnore, toIgnoreBtn, statusElm) {
-  // return console.log(Object.values(prods))
-  const Nprod = Object.keys(prods).length - toIgnore.length;
+async function POSTproducts(prods, toPost, statusElm) {
+  const Nprod = toPost.length;
+  let currentProduct;
 
-  //  Traverse through variations and build product series object
-  if (0 === Nprod) {
-    // statusElm.textContent = 'A new product has not been detected. Nothing to upload.';
-  } else if (0 < toDelete.length) {
-    // statusElm.textContent = `Product collisions found. Deleting ${toDelete.length} products...`;
-  }
+  statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
 
-  await Promise.all(deleteProducts(toDelete)).then(
-    status => {
-      console.log('finished deleting', status);
-    },
-  );
-
-  //   statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
-  console.log('toIgnore', toIgnore, toIgnore.includes(Object.values(prods)[0][f.pic]));
-  console.log('toPOST products', Object.values(prods));
-
-  let toPOST;
-  if (toIgnoreBtn.checked) {
-    toPOST = Object.values(prods).filter(prod => !toIgnore.includes(prod[f.pic]));
-  } else {
-    toPOST = Object.values(prods); // Debug line
-  }
-  console.log('toPOST filtered', toPOST);
+  console.log('toPOST filtered', toPost);
 
   //  POST loop
-  while (0 < toPOST.length) {
+  while (0 < toPost.length) {
     console.log('posting...');
-    statusElm.textContent = `Uploading products: ${toPOST.length} remaining...`;
-    await POSTproduct(toPOST.splice(0, 1)[0]);
+    statusElm.textContent = `Uploading products: ${toPost.length} of ${Nprod} received`;
+    currentProduct = prods[toPost.splice(0, 1)];
+    await POSTproduct(currentProduct);
   }
+  return Nprod;
 }
 
-export { POSTproduct, POSTproducts }
-;
+export { deleteProducts, POSTproducts, getExistingProducts };

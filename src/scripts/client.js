@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
 import { f } from './fields.js';
-import { computeChecksum, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
+import { computeChecksum, filterExisting, compareHashesForPayload, keyByPIC, linkVariations, linkPackages, verifyFields, verifyFiles } from './filters.js';
 import { fetcher, readFilePromise } from './utils.js';
-import { POSTproducts } from './rest.js';
+import { deleteProducts, POSTproducts, getExistingProducts } from './rest.js';
 import { buildProductObjs, optimizeProducts } from './products';
 
 console.log('client-side script executed');
@@ -87,12 +87,13 @@ async function init() {
   //    another shout-out: https://dev.to/jackedwardlyons/how-to-get-all-wordpress-posts-from-the-wp-api-with-javascript-3j48
 
   importerStatusElement.textContent = 'Reading existing products...';
-  await fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
+  await getExistingProducts().then(
     data => {
-      existingProducts = data;
-      importerStatusElement.textContent = `${existingProducts.length} products have been found in the WP database.`;
+      existingProducts = filterExisting(data);
+      importBtn.disabled = false;
+      importerStatusElement.textContent = `${Object.keys(existingProducts).length} products have been found in the WP database.`;
       console.log(
-        `${existingProducts.length} products have been found in the WP database.`, existingProducts,
+        `${Object.keys(existingProducts).length} products have been found in the WP database.`, existingProducts,
       );
     },
   );
@@ -101,14 +102,16 @@ async function init() {
   //    Test POST Call
   testBtn.addEventListener('mouseup', () => {
     importerStatusElement.textContent = 'Reading existing products...';
-    fetcher(`${wpApiSettings.root}wp/v2/product?per_page=100`).then(
+    getExistingProducts().then(
       data => {
-        existingProducts = data;
-        importerStatusElement.textContent = `${existingProducts.length} products have been found in the WP database.`;
+        existingProducts = filterExisting(data);
+        importBtn.disabled = false;
+        importerStatusElement.textContent = `${Object.keys(existingProducts).length} products have been found in the WP database.`;
         console.log(
-          `${existingProducts.length} products have been found in the WP database.`, existingProducts,
+            `${Object.keys(existingProducts).length} products have been found in the WP database.`, existingProducts,
         );
-      });
+      },
+    );
   });
 
   //* //////////////////////////////////////////////////////////////////////
@@ -136,9 +139,27 @@ async function init() {
       readFilePromise(packageFileHandler),
     ];
 
+    // Prevent additional imports. Enable once the new products have been uploaded and DB has been re-fetched.
+    importBtn.disabled = true;
+
     Promise.all(readPromises).then(CSVs => {
       newProducts = processCSV(...CSVs, importerStatusElement);
-      console.log('finished processing');
+      console.log('finished processing', Object.keys(newProducts));
+      const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts);
+      console.log('toDelete and toPost', toDelete, toPost);
+
+      Promise.all(deleteProducts(toDelete))
+        .then(status => {
+          console.log('finished deleting', status);
+          POSTproducts(newProducts, toPost, importerStatusElement).then((savedN) => {
+            if (0 === savedN) {
+              importerStatusElement.textContent = 'New products were not detected.';
+            } else {
+              importerStatusElement.textContent = `${savedN} have finished uploading.`;
+            }
+            importBtn.disabled = false;
+          });
+        });
     });
   });
 
@@ -147,9 +168,20 @@ async function init() {
       window.alert('Import a product sheet first');
       return false;
     }
-    const [toDelete, toIgnore] = compareHashesForPayload(newProducts, existingProducts);
-    POSTproducts(newProducts, toDelete, toIgnore, ignoreBtn, importerStatusElement).then(() => {
-      importerStatusElement.textContent = 'Products have finished uploading.';
+    // const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts);
+
+    if (0 < toDelete.length) {
+      importerStatusElement.textContent = `Deleting ${toDelete.length} products...`;
+    }
+
+    Promise.all(deleteProducts(toDelete)).then(
+      status => {
+        console.log('finished deleting', status);
+      },
+    ).then(() => {
+      // POSTproducts(newProducts, toIgnore, ignoreBtn, importerStatusElement).then(() => {
+      //   importerStatusElement.textContent = 'Products have finished uploading.';
+      // });
     });
   });
 }
