@@ -25,6 +25,5 @@
       </div>
       <div class="form-field">
         <input id='import_button' type='button' name='import_button' value='Import' disabled=true>
-        <input id='create_button' type='button' name='create_button' value='Create Products'>
       </div>
 </form>

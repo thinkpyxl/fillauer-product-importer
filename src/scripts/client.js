@@ -64,7 +64,6 @@ function processCSV(parentCSV, variationCSV, packageCSV, statusElm) {
 //  Main loop, async to allow blocking
 async function init() {
   const importBtn = document.querySelector('#import_button');
-  const createBtn = document.querySelector('#create_button');
   const parentFileInput = document.querySelector('#parent_file_input');
   const variationFileInput = document.querySelector('#variation_file_input');
   const packageFileInput = document.querySelector('#package_file_input');
@@ -145,7 +144,7 @@ async function init() {
     Promise.all(readPromises).then(CSVs => {
       newProducts = processCSV(...CSVs, importerStatusElement);
       console.log('finished processing', Object.keys(newProducts));
-      const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts);
+      const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts, ignoreBtn.checked);
       console.log('toDelete and toPost', toDelete, toPost);
 
       Promise.all(deleteProducts(toDelete))
@@ -160,28 +159,6 @@ async function init() {
             importBtn.disabled = false;
           });
         });
-    });
-  });
-
-  createBtn.addEventListener('mouseup', ev => {
-    if (!newProducts) {
-      window.alert('Import a product sheet first');
-      return false;
-    }
-    // const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts);
-
-    if (0 < toDelete.length) {
-      importerStatusElement.textContent = `Deleting ${toDelete.length} products...`;
-    }
-
-    Promise.all(deleteProducts(toDelete)).then(
-      status => {
-        console.log('finished deleting', status);
-      },
-    ).then(() => {
-      // POSTproducts(newProducts, toIgnore, ignoreBtn, importerStatusElement).then(() => {
-      //   importerStatusElement.textContent = 'Products have finished uploading.';
-      // });
     });
   });
 }

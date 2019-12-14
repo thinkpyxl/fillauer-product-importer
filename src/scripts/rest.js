@@ -144,7 +144,7 @@ async function POSTproducts(prods, toPost, statusElm) {
   //  POST loop
   while (0 < toPost.length) {
     console.log('posting...');
-    statusElm.textContent = `Uploading products: ${toPost.length} of ${Nprod} received`;
+    statusElm.textContent = `Uploading products: ${Nprod - toPost.length} of ${Nprod} received`;
     currentProduct = prods[toPost.splice(0, 1)];
     await POSTproduct(currentProduct);
   }
