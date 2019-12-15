@@ -127,7 +127,6 @@ function buildPackageObj(packages) {
     rv[id][f.attr] = splitAndVerify(rv[id][f.attr]);
     rv[id][f.skus] = splitAndVerify(rv[id][f.skus]);
   });
-  console.log(rv);
   return rv;
 }
 
@@ -164,7 +163,6 @@ function linkVariations(parents, varies) {
 
 function linkPackages(parents, packs) {
   packs = buildPackageObj(packs);
-  console.log('package sheet objs', packs);
 
   // Learn what you can from just variations
   Object.values(parents).map(prod => {
