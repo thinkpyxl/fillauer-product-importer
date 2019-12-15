@@ -47,7 +47,6 @@ function processCSV(parentCSV, variationCSV, packageCSV, statusElm) {
   const productsWithVariations = linkVariations(productsByPIC, importedVariations);
 
   const productsWithPackages = linkPackages(productsWithVariations, packageCSV);
-  console.log('packaged ', productsWithPackages);
 
   const productsOptimized = optimizeProducts(productsWithPackages);
 
