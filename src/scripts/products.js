@@ -1,6 +1,40 @@
 import { findSpecBounds, findSpecIcons, buildSpec } from './filters';
 import { f } from './fields';
 
+function combineUnitSpecs(parent) {
+  const combos = { };
+  Object.keys(parent.specs).forEach(specLabel => {
+    const lastBracket = specLabel.lastIndexOf(')');
+    if (-1 !== lastBracket) {
+      const firstBracket = specLabel.lastIndexOf('(');
+      const base = specLabel.substr(0, firstBracket);
+      const unit = specLabel.substr(firstBracket, lastBracket);
+      if (!combos[base]) combos[base] = {};
+      combos[base][unit] = parent.specs[specLabel];
+      // combos[base][unit].val += unit;
+    }
+  });
+  Object.keys(combos).forEach(combo => {
+    const comboUnits = Object.keys(combos[combo]);
+    // Don't create a combo unit unless there are at least 2 units to combine
+    if (2 > comboUnits.length) return false;
+    comboUnits.forEach((unit, i) => {
+      // First value dictates the logo and featuredBool used
+      const directUnit = unit.substr(1, unit.length - 2);
+      delete parent.specs[(combo + unit)];
+      if (0 === i) {
+        parent.specs[combo.trim()] = combos[combo][unit];
+        parent.specs[combo.trim()].val += ` ${directUnit}`;
+      } else {
+        parent.specs[combo.trim()].val += ` (${combos[combo][unit].val} ${directUnit})`;
+      }
+    });
+  });
+
+  // Not using includesAny() since I'm particularly looking for units in parenthesis
+  return parent.specs;
+}
+
 function buildProductObjs(attrRow, rows) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
@@ -32,7 +66,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2058' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
 
     // Taxonomies
@@ -90,6 +124,9 @@ function buildProductObjs(attrRow, rows) {
     product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
 
     product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
+
+    // Optimize specs by combining different units of the same spec
+    product.specs = combineUnitSpecs(product);
 
     // Ignore blank rows or incomplete products
     if (product !== undefined && product[f.name] && product[f.pic]) {
@@ -220,7 +257,7 @@ function includesAny(subject, arr) {
 }
 
 // Spec labels are pulled from just the first variation.
-function combineSpecs(parent) {
+function combineVariationSpecs(parent) {
   const combos = {};
   const searchFor = ['Minimum', 'Maximum', 'Min', 'Max', 'min', 'max'];
 
@@ -258,15 +295,13 @@ function combineSpecs(parent) {
     });
   });
 
-  // TODO: Unit combinations
-
   return parent;
 }
 
 function optimizeProducts(parents) {
   // Reformat variation object for lighter specs overhead
   Object.keys(parents).forEach(key => {
-    parents[key] = combineSpecs(parents[key]);
+    parents[key] = combineVariationSpecs(parents[key]);
     // console.log(parents[key]);
     parents[key] = optimizeVariations(parents[key]);
     // console.log(parents[key]);
