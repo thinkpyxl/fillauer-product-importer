@@ -59,11 +59,19 @@ function filterExisting(data) {
   return existingHashes;
 }
 
-function compareHashesForPayload(newProds, existing, updating = true) {
+function compareHashesForPayload(newProds, existing, updating = true, PICsToUpdate = '') {
   if (!existing) return [[], Object.keys(newProds)];
   const toPost = [];
 
-  if (updating) {
+  if (PICsToUpdate) {
+    console.log('PIC specifier found', PICsToUpdate);
+    toPost.push(...PICsToUpdate.split(',')
+      .map(pic => {
+        pic = pic.trim();
+        if (newProds[pic]) return pic;
+      })
+      .filter(val => val));
+  } else if (updating) {
   // If this is an update, consider checksums for unchanged products
     toPost.push(...Object.keys(newProds).map(pic => {
       if (existing[pic] && existing[pic].checksum === newProds[pic].checksum) {

@@ -12,15 +12,19 @@
         <input id='ignore_button' type='checkbox' name='ignore_button' value=''>
       </div>
       <div class='form-field'>
-        <label for='parent_file'>Parent Products</label>
+        <label for='specific_product'>Upload Only: (PICs)</label>
+        <input id='specific_product' type='text' name='specific_product' value=''>
+      </div>
+      <div class='form-field'>
+        <label for='parent_file'>Parent Products CSV file</label>
         <input id='parent_file_input' type='file' name='parent_file'>
       </div>
       <div class="form-field">
-        <label for='variation_file'>Variation Products</label>
+        <label for='variation_file'>Variation Products CSV file</label>
         <input id='variation_file_input' type='file' name='variation_file'>
       </div>
       <div class="form-field">
-        <label for='package_file'>Package Information</label>
+        <label for='package_file'>Package Information CSV file</label>
         <input id='package_file_input' type='file' name='package_file'>
       </div>
       <div class="form-field">
