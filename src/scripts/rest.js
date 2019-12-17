@@ -52,10 +52,11 @@ function deleteProduct(postID, verbose = false) {
   });
 }
 
-async function deleteProducts(prods) {
+async function deleteProducts(prods, statuseElm) {
   const responses = [];
   let lastDelete;
   while (0 < prods.length) {
+    statuseElm.textContent = `Deleting products. ${prods.length} remain...`;
     lastDelete = await deleteProduct(prods.splice(0, 1)[0], true);
     responses.push(lastDelete);
   }

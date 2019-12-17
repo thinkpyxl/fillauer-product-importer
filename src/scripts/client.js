@@ -147,7 +147,7 @@ async function init() {
       const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts, ignoreBtn.checked, PICspecifier.value);
       console.log('toDelete and toPost', toDelete, toPost);
 
-      deleteProducts(toDelete)
+      deleteProducts(toDelete, importerStatusElement)
         .then(status => {
           console.log('finished deleting', status);
           POSTproducts(newProducts, toPost, importerStatusElement).then((savedN) => {
