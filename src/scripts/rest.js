@@ -52,10 +52,14 @@ function deleteProduct(postID, verbose = false) {
   });
 }
 
-function deleteProducts(prods) {
-  return prods.map(id => {
-    return deleteProduct(id, true);
-  });
+async function deleteProducts(prods) {
+  const responses = [];
+  let lastDelete;
+  while (0 < prods.length) {
+    lastDelete = await deleteProduct(prods.splice(0, 1)[0], true);
+    responses.push(lastDelete);
+  }
+  return responses;
 }
 
 async function POSTproduct(val) {
