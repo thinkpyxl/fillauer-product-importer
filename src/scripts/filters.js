@@ -59,33 +59,33 @@ function filterExisting(data) {
   return existingHashes;
 }
 
-function compareHashesForPayload(newProds, existing, updating = true, PICsToUpdate = '') {
+function compareHashesForPayload(newProds, existing, updating = true) {
   if (!existing) return [[], Object.keys(newProds)];
+  const toDelete = [];
   const toPost = [];
+  const toUpdate = [];
 
-  if (PICsToUpdate) {
-    console.log('PIC specifier found', PICsToUpdate);
-    toPost.push(...PICsToUpdate.split(',')
-      .map(pic => {
-        pic = pic.trim();
-        if (newProds[pic]) return pic;
-      })
-      .filter(val => val));
-  } else if (updating) {
-  // If this is an update, consider checksums for unchanged products
-    toPost.push(...Object.keys(newProds).map(pic => {
-      if (existing[pic] && existing[pic].checksum === newProds[pic].checksum) {
-        return false;
-      }
-      return pic;
-    }).filter(val => false !== val));
-  } else {
-    // Otherwise, post everything found
-    toPost.push(...Object.keys(newProds));
-  }
-  // For every product that'll be posted, find its possible corresponding post in WP to delete
-  const toDelete = toPost.filter(pic => undefined !== existing[pic]).map(pic => existing[pic].id);
-  return [toDelete, toPost];
+  const newPics = Object.keys(newProds);
+
+  let ignoringN = 0;
+
+  // Ugh, just redo it
+  newPics.forEach(pic => {
+    if (!existing[pic]) {
+      toPost.push(pic);
+    } else if (existing[pic].checksum !== newProds[pic].checksum) {
+      existing[pic].pic = pic;
+      toUpdate.push(existing[pic]);
+    }
+    // else, this product has not been updated
+    ignoringN++;
+  });
+
+  console.log(`Creating : ${toPost.length}`);
+  console.log(`Updating : ${toUpdate.length}`);
+  console.log(`Ignoreing: ${ignoringN}`);
+
+  return [toDelete, toPost, toUpdate];
 }
 
 function keyByPIC(prods) {

@@ -63,7 +63,7 @@ async function deleteProducts(prods, statuseElm) {
   return responses;
 }
 
-async function POSTproduct(val) {
+async function POSTproduct(val, updateID = false) {
   // val = verifyFields(val);   // Until this is used... If this is used...
   const payload = {
     title: val[f.name],
@@ -74,7 +74,7 @@ async function POSTproduct(val) {
     meta: {
       SKU: val[f.sku],
       PIC: val[f.pic],
-      order_info: val[f.orderInfo],
+      ordering_info: val[f.orderInfo],
       product_type: val[f.type],
       product_hash: val.checksum, // Used for finding changes between new imports and wp posts
       main_model: val[f.main_model],
@@ -92,7 +92,11 @@ async function POSTproduct(val) {
   };
 
   // console.log('product payload', payload);
-  return fetcher(`${wpApiSettings.root}wp/v2/product`, {
+  let url = `${wpApiSettings.root}wp/v2/product`;
+  if (updateID) {
+    url = `${wpApiSettings.root}wp/v2/product/${updateID}`;
+  }
+  return fetcher(url, {
     method: 'post',
     headers: {
       'X-WP-Nonce': wpApiSettings.nonce,
@@ -138,20 +142,29 @@ async function POSTvariations(POSTid, varies, depth = 1) {
   });
 }
 
-async function POSTproducts(prods, toPost, statusElm) {
-  const Nprod = toPost.length;
-  let currentProduct;
+async function POSTproducts(prods, toCreate, toUpdate, statusElm) {
+  const Nprod = toCreate.length + toUpdate.length;
+  let currentProduct, prodData, prodID;
+  let finished = 0;
 
   statusElm.textContent = `Uploading products: 0 of ${Nprod} received`;
 
-  console.log('toPOST filtered', toPost);
+  console.log('POSTing...', toCreate, toUpdate);
 
   //  POST loop
-  while (0 < toPost.length) {
-    console.log('posting...');
-    statusElm.textContent = `Uploading products: ${Nprod - toPost.length} of ${Nprod} received`;
-    currentProduct = prods[toPost.splice(0, 1)];
-    await POSTproduct(currentProduct);
+  while (0 < toCreate.length) {
+    console.log('posting new product...');
+    statusElm.textContent = `Uploading products: ${finished++} of ${Nprod} received`;
+    prodData = prods[toCreate.splice(0, 1)];
+    await POSTproduct(prodData);
+  }
+  while (0 < toUpdate.length) {
+    console.log('posting updates...');
+    statusElm.textContent = `Uploading products: ${finished++} of ${Nprod} received`;
+    currentProduct = toUpdate.splice(0, 1)[0];
+    prodData = prods[currentProduct.pic];
+    prodID = currentProduct.id;
+    await POSTproduct(prodData, prodID);
   }
   return Nprod;
 }

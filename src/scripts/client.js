@@ -68,7 +68,6 @@ async function init() {
   const packageFileInput = document.querySelector('#package_file_input');
   const testBtn = document.querySelector('#test_button');
   const ignoreBtn = document.querySelector('#ignore_button');
-  const PICspecifier = document.querySelector('#specific_product');
   let existingProducts = null;
   let newProducts = null;
 
@@ -144,13 +143,13 @@ async function init() {
     Promise.all(readPromises).then(CSVs => {
       newProducts = processCSV(...CSVs, importerStatusElement);
       console.log('finished processing', Object.keys(newProducts));
-      const [toDelete, toPost] = compareHashesForPayload(newProducts, existingProducts, ignoreBtn.checked, PICspecifier.value);
-      console.log('toDelete and toPost', toDelete, toPost);
+      const [toDelete, toCreate, toUpdate] = compareHashesForPayload(newProducts, existingProducts, ignoreBtn.checked);
+      console.log('toDelete and toPost', toDelete, toCreate);
 
       deleteProducts(toDelete, importerStatusElement)
         .then(status => {
           console.log('finished deleting', status);
-          POSTproducts(newProducts, toPost, importerStatusElement).then((savedN) => {
+          POSTproducts(newProducts, toCreate, toUpdate, importerStatusElement).then((savedN) => {
             if (0 === savedN) {
               importerStatusElement.textContent = 'New products were not detected.';
             } else {
