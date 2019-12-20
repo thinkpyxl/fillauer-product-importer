@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.6.2
+ * Version: 1.7
  */
 
 
@@ -172,7 +172,6 @@ function update_specs( $value, $prod, $field_name ) {
 
 function update_packages( $value, $prod, $field_name ) {
 
-	// error_log( 'package ' . print_r( $value, true ) );
 	$package_index = 1;
 	foreach ( $value as $key => $value ) {
 		// error_log( 'package key ' . print_r( $key, true ) );
@@ -299,6 +298,20 @@ add_action(
 				},
 				'update_callback' => function( $value, $listing_obj, $field_name ) {
 					error_log('Receiving product: '.print_r($value['PIC'], TRUE));
+					// Delete existing fields, if the product is being re-imported
+					//! THIS DOES NOT ACCOUNT FOR: 
+					//     Taxonomies, 
+					// Title, Desc (Content) and Short Desc (Excerpt) will 
+					//   always post/overwrite with empty strings if absent
+
+					//  we only need the ACF field names 
+					$ACF_keys = array_keys(get_fields($listing_obj->ID));
+					error_log('    Existing acf : '.print_r($ACF_keys, TRUE));
+					foreach($ACF_keys as $ACF_key){
+						delete_field($ACF_key, $listing_obj->ID);
+					}
+
+					// Assign meta data
 					foreach ( $value as $key => $value ) {
 						update_post_meta( $listing_obj->ID, $key, $value );
 					}
