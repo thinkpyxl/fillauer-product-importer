@@ -8,8 +8,8 @@
         <input id='test_button' type='button' name='test_button' value='Refresh Existing Products'>
       </div>
       <div class='form-field'>
-        <label for='ignore_button'>Ignore Unmodified Products</label>
-        <input id='ignore_button' type='checkbox' name='ignore_button' value=''>
+        <label for='force_button'>Force Update</label>
+        <input id='force_button' type='checkbox' name='force_button' value=''>
       </div>
       <div class='form-field'>
         <label for='parent_file'>Parent Products CSV file</label>

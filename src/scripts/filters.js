@@ -59,7 +59,7 @@ function filterExisting(data) {
   return existingHashes;
 }
 
-function compareHashesForPayload(newProds, existing, updating = true) {
+function compareHashesForPayload(newProds, existing, forcing = false) {
   if (!existing) return [[], Object.keys(newProds)];
   const toDelete = [];
   const toPost = [];
@@ -72,13 +72,17 @@ function compareHashesForPayload(newProds, existing, updating = true) {
   // Ugh, just redo it
   newPics.forEach(pic => {
     if (!existing[pic]) {
+      // Create new products
       toPost.push(pic);
-    } else if (existing[pic].checksum !== newProds[pic].checksum) {
-      existing[pic].pic = pic;
+    } else if (forcing || existing[pic].checksum !== newProds[pic].checksum) {
+      // Update existing products
+      existing[pic].pic = pic; // Lol
       toUpdate.push(existing[pic]);
+    } else {
+      // Ignore unchanged products, we're just incrementing a counter for stats
+      ignoringN++;
     }
     // else, this product has not been updated
-    ignoringN++;
   });
 
   console.log(`Creating : ${toPost.length}`);

@@ -67,7 +67,7 @@ async function init() {
   const variationFileInput = document.querySelector('#variation_file_input');
   const packageFileInput = document.querySelector('#package_file_input');
   const testBtn = document.querySelector('#test_button');
-  const ignoreBtn = document.querySelector('#ignore_button');
+  const forceBtn = document.querySelector('#force_button');
   let existingProducts = null;
   let newProducts = null;
 
@@ -143,7 +143,7 @@ async function init() {
     Promise.all(readPromises).then(CSVs => {
       newProducts = processCSV(...CSVs, importerStatusElement);
       console.log('finished processing', Object.keys(newProducts));
-      const [toDelete, toCreate, toUpdate] = compareHashesForPayload(newProducts, existingProducts, ignoreBtn.checked);
+      const [toDelete, toCreate, toUpdate] = compareHashesForPayload(newProducts, existingProducts, forceBtn.checked);
       console.log('toDelete and toPost', toDelete, toCreate);
 
       deleteProducts(toDelete, importerStatusElement)
