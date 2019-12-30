@@ -1,7 +1,40 @@
-input[type='file'] {
-  width: 600px;
-  background-color: cyan;
+.container {
+  display: flex;
+  height: 70vh;
 }
-.form-field{
-  margin: 1em;
+
+.panel {
+  background-color: #009bdf;
+  flex: 1 auto;
+  height: 100%;
+  position: relative;
+  width: 30%;
+
+  .overlay {
+    pointer-events: none;
+    position: absolute;
+  }
+
+  input {
+    outline: none;
+    user-select: none;
+  }
+
+  > * {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.old {
+  display: none;
+
+  input[type="file"] {
+    background-color: cyan;
+    width: 600px;
+  }
+
+  .form-field {
+    margin: 1em;
+  }
 }
