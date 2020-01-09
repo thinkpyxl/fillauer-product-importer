@@ -151,7 +151,7 @@ function linkVariations(parents, varies) {
       parents[prod[f.pic]].variations.push({
         name: prod[f.name],
         sku: prod[f.sku],
-        specs: [],
+        specs: prod.specs,
       });
     }
   });
