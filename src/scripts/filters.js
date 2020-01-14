@@ -287,6 +287,9 @@ function linkPackages(parents, packs) {
           // If the title is not specified, this is a product blurb and the title and product_info should be pulled from the PIC.
           packages['custom' + id].product_info = ['name', 'description', 'image'];
         }
+        if (packs[id][f.prod_info]) {
+          packages['custom' + id].product_info = packs[id][f.prod_info].split(',').map(val => val.trim());
+        }
         if (packs[id][f.model]) {
           packages['custom' + id].model = packs[id][f.model];
         }
