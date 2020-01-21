@@ -67,13 +67,16 @@ function buildProductObjs(attrRow, rows) {
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
     // if ('2058' !== product[f.pic] /* || !product[f.type] */) return undefined;
-    // if ('2076' !== product[f.pic] || !product[f.type]) return undefined;
+    // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
 
     // Taxonomies
     product.terms.product_cat = product[f.cat] ? product[f.cat]
       .split('::').map(term => term.trim()) : [];
     product.terms.product_tag = product[f.tag] ? product[f.tag]
       .split(',').map(term => term.trim()) : [];
+
+    // Default search weight of 3 if absent
+    product[f.searchWeight] = product[f.searchWeight] ? product[f.searchWeight] : 3;
 
     // Warranty pieces into one
     product.warranty.body = product[f.warrantyBody];
@@ -174,38 +177,6 @@ function optimizeVariations(parent) {
 }
 
 function dependantVariations(parent) {
-  /*
-  specComp = {
-    size: {
-      22: {
-        min: 40, 50, 60,
-        max: 49, 59, 69,
-        maxK:19, 29, 39,
-      }
-      23: {
-        min:  40, 50, 60,
-        max:  49, 59, 69,
-        maxK: 19, 29, 39,
-      }
-    }
-    min: {
-      40: {
-        size: 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        max:  49             // If there is only one possible, link min-max-maxK
-        maxK: 19
-      }
-    }
-    max: {
-      49: {
-        size: 22, 23, 24, 25, 26, 27, 28, 29, 30,
-        min:  40,
-        maxK: 19,
-      }
-    }
-    maxK
-    minK
-  }
-  */
   const specCompare = {};
   const labels = parent.variations.labels;
   const variationValues = parent.variations.varies[0];
@@ -298,6 +269,13 @@ function combineVariationSpecs(parent) {
   return parent;
 }
 
+function addAllSKUs(product) {
+  if ('variation' === product[f.type]) {
+    product[f.sku] = product.variations.varies[0].map(vary => vary.sku).join(', ');
+  }
+  return product;
+}
+
 function optimizeProducts(parents) {
   // Reformat variation object for lighter specs overhead
   Object.keys(parents).forEach(key => {
@@ -306,7 +284,10 @@ function optimizeProducts(parents) {
     parents[key] = optimizeVariations(parents[key]);
     // console.log(parents[key]);
     parents[key] = dependantVariations(parents[key]);
+
+    parents[key] = addAllSKUs(parents[key]);
   });
+
   return parents;
 }
 
