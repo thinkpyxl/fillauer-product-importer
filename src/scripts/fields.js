@@ -28,6 +28,7 @@ const f = {
   downs: 'Downloads',
   main_model: 'Main Model',
   pnf: 'In Part Number Finder',
+  searchWeight: 'Search Weight',
 };
 
 export { f };

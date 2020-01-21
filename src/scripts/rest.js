@@ -79,6 +79,7 @@ async function POSTproduct(val, updateID = false) {
       product_hash: val.checksum, // Used for finding changes between new imports and wp posts
       main_model: val[f.main_model],
       part_number_finder: val[f.pnf],
+      search_weight: val[f.searchWeight],
     },
     specs: val.specs,
     gallery: val.gallery,
