@@ -269,9 +269,9 @@ function combineVariationSpecs(parent) {
   return parent;
 }
 
-function addAllSKUs(product) {
+function addFirstSKU(product) {
   if ('variation' === product[f.type]) {
-    product[f.sku] = product.variations.varies[0].map(vary => vary.sku).join(', ');
+    product[f.sku] = product.variations.varies[0][0].sku;
   }
   return product;
 }
@@ -285,7 +285,7 @@ function optimizeProducts(parents) {
     // console.log(parents[key]);
     parents[key] = dependantVariations(parents[key]);
 
-    parents[key] = addAllSKUs(parents[key]);
+    parents[key] = addFirstSKU(parents[key]);
   });
 
   return parents;
