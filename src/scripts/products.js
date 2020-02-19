@@ -280,6 +280,106 @@ function addFirstSKU(product) {
   return product;
 }
 
+function removeVariationSpecValue(product, specIndex) {
+  const newVariesLoad = product.variations.varies[0].map(vary => {
+    vary.specs[specIndex] = '';
+    return vary;
+  });
+
+  product.variations.varies[0] = newVariesLoad;
+  return product;
+}
+
+function propagateConstantSpecs(product) {
+  // console.log('before', product);
+  const constantSpecs = product.variations.labels.map((label, ind) => {
+    return ind;
+  });
+
+  // Keeping in mind that varies originally supporter variation loads,
+  //   the idea of separating loads was depreciated and only the first load is used now.
+  // This will start looping from the 2nd element, comparing each with the element behind.
+  //   if a DIFFERENT element is found, we know that specification should be part of the variations
+  //   because it needs to be specified by a Dropdown.
+  //   Otherwise, this is a specification that should have not been given to the variation,
+  //     but the parent product instead.
+
+  // Fails for MC's Protective Sleeve for ETD as it won't compare the last variations.
+  product.variations.varies[0].slice(1).forEach((vary, i) => {
+    // vary is arr[i + 1]
+    // console.log(`variation: ${i} <-> ${i + 1}`);
+    // console.log('   ', product.variations.varies[0][i].specs);
+    // console.log('   ', vary.specs);
+    constantSpecs.forEach(labelIndex => {
+      if (product.variations.varies[0][i].specs[labelIndex] !== vary.specs[labelIndex]) {
+        constantSpecs.splice(constantSpecs.indexOf(labelIndex), 1);
+      }
+    });
+  });
+
+  // Now because of the combineVariationSpecs, variations that have been mixed into one, the old "min" "max" specs still exist, but each value is replaced with an empty string
+  //  The algorithm above is finding which spec values are the same across ALL variations, we can eliminate these specLabels from propagating to the parent by checking that that spec's value isn't an empty string for just one variation.
+
+  // Go through the constant specs, keeping in mind combined specs, and propagate them towards the parent's specs
+
+  /**
+   * Build Height:
+        val: "3 in. (76 mm)"
+        icon: "ruler-vertical"
+        featured: true
+     Build Height (in.): "3"
+    */
+  //  Strip units from both parent and variation specs
+  //
+  const removeUnits = (labelArray) => labelArray.map(label => {
+    const startBracketIndex = label.indexOf('(');
+    if (-1 !== startBracketIndex) {
+      return label.substr(0, startBracketIndex).trim();
+    } else {
+      return label;
+    };
+  });
+
+  // The challenge here is the labels are different so matches/operations span across several indices
+  const parentSpecsLabels = Object.keys(product.specs);
+  const parentSpecsLabelsUnitless = removeUnits(parentSpecsLabels);
+  const variationSpecsLabelsUnitless = removeUnits(product.variations.labels);
+
+  // console.log(parentSpecsLabelsUnitless);
+  // console.log(variationSpecsLabelsUnitless);
+
+  // Update products
+  constantSpecs.forEach(specLabelIndex => {
+    // Do nothing, merged and inactive spec label
+    if ('' === product.variations.varies[0][0].specs[specLabelIndex]) {
+      return false;
+    }
+
+    // Parent is already representing and variation constant spec is duplicate
+    //   Just remove variation spec
+    const label = product.variations.labels[specLabelIndex];
+    if (parentSpecsLabelsUnitless.includes(variationSpecsLabelsUnitless[specLabelIndex])) {
+      removeVariationSpecValue(product, specLabelIndex);
+      console.log(`${product[f.name]}: Duplicate Spec`, product.variations.labels[specLabelIndex]);
+      return true;
+    }
+
+    // Propagate variation spec to parent
+    //   Meaning remove from variations and create in parent
+
+    product.specs[label] = {
+      val: product.variations.varies[0][0].specs[specLabelIndex],
+      icon: 'cog',
+      featured: false,
+    };
+    removeVariationSpecValue(product, specLabelIndex);
+    console.log(`${product[f.name]}: Moved Spec to Parent`, product.variations.labels[specLabelIndex]);
+  });
+
+  // console.log('after', product);
+  return product;
+}
+
 function optimizeProducts(parents) {
   // Reformat variation object for lighter specs overhead
   Object.keys(parents).forEach(key => {
@@ -290,6 +390,8 @@ function optimizeProducts(parents) {
     parents[key] = dependantVariations(parents[key]);
 
     parents[key] = addFirstSKU(parents[key]);
+
+    parents[key] = propagateConstantSpecs(parents[key]);
   });
 
   return parents;
