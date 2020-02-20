@@ -126,7 +126,11 @@ function buildProductObjs(attrRow, rows) {
     // Part Number Field toggle field
     product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
 
+    // Visibility
     product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
+
+    // Region Specification
+    product[f.region] = product[f.region] ? product[f.region] : 'US';
 
     // Optimize specs by combining different units of the same spec
     product.specs = combineUnitSpecs(product);
