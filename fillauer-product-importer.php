@@ -297,7 +297,7 @@ add_action(
 					return $listing_obj;
 				},
 				'update_callback' => function( $value, $listing_obj, $field_name ) {
-					error_log('Receiving product: '.print_r($value['PIC'], TRUE));
+
 					// Delete existing fields, if the product is being re-imported
 					//! THIS DOES NOT ACCOUNT FOR: 
 					//     Taxonomies, 
@@ -305,8 +305,9 @@ add_action(
 					//   always post/overwrite with empty strings if absent
 
 					//  we only need the ACF field names 
-					$ACF_keys = array_keys(get_fields($listing_obj->ID));
-					error_log('    Existing acf : '.print_r($ACF_keys, TRUE));
+					$ACF_fields = get_fields($listing_obj->ID) ?: [];
+					$ACF_keys = array_keys($ACF_fields);
+
 					foreach($ACF_keys as $ACF_key){
 						delete_field($ACF_key, $listing_obj->ID);
 					}
