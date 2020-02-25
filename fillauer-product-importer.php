@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.7.5
+ * Version: 1.7.6
  */
 
 
@@ -151,6 +151,26 @@ function update_downloads( $value, $prod, $field_name ) {
 	}
 }
 
+function update_region( $value, $prod, $field_name ) {
+	$valid_languages = apply_filters( 'wpml_active_languages', NULL, 'orderby=id&order=desc' ) ?: [];
+	$lang_codes = array_keys( $valid_languages );
+
+	if( false == in_array($value, $lang_codes) ){
+		error_log('======   IMPORTER   ======');
+		error_log('Invalid language attempted: '.print_r($value, true));
+		error_log('');
+		return false;
+	}
+
+	$wpml_element_type = apply_filters( 'wpml_element_type', 'product' );
+	$args = [
+		'element_id' => $prod->ID,
+		'element_type' => $wpml_element_type,
+		'language_code' => $value,
+	];
+	do_action( 'wpml_set_element_language_details', $args );
+}
+
 
 function update_specs( $value, $prod, $field_name ) {
 	// error_log( 'specs ' . print_r( $value, true ) );
@@ -297,7 +317,7 @@ add_action(
 					return $listing_obj;
 				},
 				'update_callback' => function( $value, $listing_obj, $field_name ) {
-					error_log('Receiving product: '.print_r($value['PIC'], TRUE));
+
 					// Delete existing fields, if the product is being re-imported
 					//! THIS DOES NOT ACCOUNT FOR: 
 					//     Taxonomies, 
@@ -305,8 +325,9 @@ add_action(
 					//   always post/overwrite with empty strings if absent
 
 					//  we only need the ACF field names 
-					$ACF_keys = array_keys(get_fields($listing_obj->ID));
-					error_log('    Existing acf : '.print_r($ACF_keys, TRUE));
+					$ACF_fields = get_fields($listing_obj->ID) ?: [];
+					$ACF_keys = array_keys($ACF_fields);
+
 					foreach($ACF_keys as $ACF_key){
 						delete_field($ACF_key, $listing_obj->ID);
 					}
@@ -389,6 +410,14 @@ add_action(
 			'downloads',
 			[
 				'update_callback' => 'update_downloads',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'region',
+			[
+				'update_callback' => 'update_region',
 				'schema'          => null,
 			]
 		);
