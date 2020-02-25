@@ -85,12 +85,13 @@ async function POSTproduct(val, updateID = false) {
     specs: val.specs,
     gallery: val.gallery,
     variations: val.variations ? variationSlice(val.variations, 0) : [], // .splice(0, 40) : [],
+    packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
     warranty: val.warranty,
     features: val.features,
     indications: val.indications,
     downloads: val.downloads,
     related: val.related,
-    packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
+    region: val[f.region],
   };
 
   // console.log('product payload', payload);

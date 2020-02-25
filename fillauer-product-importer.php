@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.7.5
+ * Version: 1.7.6
  */
 
 
@@ -149,6 +149,26 @@ function update_downloads( $value, $prod, $field_name ) {
 			], $prod->ID );
 		}
 	}
+}
+
+function update_region( $value, $prod, $field_name ) {
+	$valid_languages = apply_filters( 'wpml_active_languages', NULL, 'orderby=id&order=desc' ) ?: [];
+	$lang_codes = array_keys( $valid_languages );
+
+	if( false == in_array($value, $lang_codes) ){
+		error_log('======   IMPORTER   ======');
+		error_log('Invalid language attempted: '.print_r($value, true));
+		error_log('');
+		return false;
+	}
+
+	$wpml_element_type = apply_filters( 'wpml_element_type', 'product' );
+	$args = [
+		'element_id' => $prod->ID,
+		'element_type' => $wpml_element_type,
+		'language_code' => $value,
+	];
+	do_action( 'wpml_set_element_language_details', $args );
 }
 
 
@@ -390,6 +410,14 @@ add_action(
 			'downloads',
 			[
 				'update_callback' => 'update_downloads',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'region',
+			[
+				'update_callback' => 'update_region',
 				'schema'          => null,
 			]
 		);

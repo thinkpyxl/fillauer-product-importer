@@ -130,7 +130,7 @@ function buildProductObjs(attrRow, rows) {
     product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
 
     // Region Specification
-    product[f.region] = product[f.region] ? product[f.region] : 'US';
+    product[f.region] = product[f.region] ? product[f.region] : 'en';
 
     // Optimize specs by combining different units of the same spec
     product.specs = combineUnitSpecs(product);
