@@ -7,6 +7,7 @@
   <div class="parent panel">
     <div class="overlay">
       <img src="https://via.placeholder.com/150" alt="">
+      <svg class="w-8 h-8 mr-6 flex-shrink-0 fill-current text-primary"><use xlink:href="#icon-cog"/></svg>
     </div>
     <input id='parent_file_input' type='file' name='parent_file'>
     <!-- <label for='parent_file'>Parent Products CSV file</label> -->
@@ -19,6 +20,8 @@
     <input id='package_file_input' type='file' name='package_file'>
   </div>
 </div>
+
+<input id='import_button' type='button' name='import_button' value='Import' disabled=true>
 
 <div class="old">
   <form name='product_file_importer' enctype='multipart/form-data'>

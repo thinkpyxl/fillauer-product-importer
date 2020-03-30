@@ -5,6 +5,7 @@
  * Version: 1.7
  */
 
+use function _core\helpers\template\render_svg;
 
 //  Create menu
 function importer_menu() {
@@ -413,5 +414,6 @@ add_action( 'importer_enqueue_scripts', 'register_processor' );
 
 function product_import_page() {
 	do_action( 'importer_enqueue_scripts' );
+	render_svg( 'sprite' );
 	include 'plugin-page.php';
 }
