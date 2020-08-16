@@ -2,7 +2,8 @@ import { findSpecBounds, findSpecIcons, buildSpec } from './filters';
 import { f } from './fields';
 
 function combineUnitSpecs(parent) {
-  const combos = { };
+  const combos = {};
+  console.log(parent);
   Object.keys(parent.specs).forEach(specLabel => {
     const lastBracket = specLabel.lastIndexOf(')');
     if (-1 !== lastBracket) {
@@ -11,6 +12,7 @@ function combineUnitSpecs(parent) {
       const unit = specLabel.substr(firstBracket, lastBracket);
       if (!combos[base]) combos[base] = {};
       combos[base][unit] = parent.specs[specLabel];
+      console.log(parent.specs[specLabel]);
       // combos[base][unit].val += unit;
     }
   });
@@ -66,7 +68,7 @@ function buildProductObjs(attrRow, rows) {
     });
 
     // TODO: ONLY FOR TESTING ONE PRODUCT
-    // if ('2058' !== product[f.pic] /* || !product[f.type] */) return undefined;
+    // if ('2102' !== product[f.pic] /* || !product[f.type] */) return undefined;
     // if ('2076' !== product[f.pic] /* || !product[f.type] */) return undefined;
 
     // Taxonomies
@@ -273,6 +275,22 @@ function combineVariationSpecs(parent) {
   return parent;
 }
 
+function fillBlankVariations(product) {
+  const totalSpecs = product.variations.labels.length;
+
+  // Skipping varies pagination that never got used
+  product.variations.varies[0].forEach((variation, varyInd) => {
+    // For each spec inside each variation, assign empty string if non-existent.
+    for (let i = 0; i < totalSpecs; i++) {
+      if (!variation.specs[i]) {
+        product.variations.varies[0][varyInd].specs[i] = '';
+      };
+    };
+  });
+
+  return product;
+}
+
 function addFirstSKU(product) {
   if ('variation' === product[f.type]) {
     product[f.sku] = product.variations.varies[0][0].sku;
@@ -288,6 +306,8 @@ function optimizeProducts(parents) {
     parents[key] = optimizeVariations(parents[key]);
     // console.log(parents[key]);
     parents[key] = dependantVariations(parents[key]);
+
+    parents[key] = fillBlankVariations(parents[key]);
 
     parents[key] = addFirstSKU(parents[key]);
   });

@@ -87,7 +87,7 @@ function compareHashesForPayload(newProds, existing, forcing = false) {
 
   console.log(`Creating : ${toPost.length}`);
   console.log(`Updating : ${toUpdate.length}`);
-  console.log(`Ignoreing: ${ignoringN}`);
+  console.log(`Ignoring: ${ignoringN}`);
 
   return [toDelete, toPost, toUpdate];
 }
