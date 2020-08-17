@@ -1,6 +1,6 @@
 {
   "name": "product-importer",
-  "version": "1.7.9",
+  "version": "1.8",
   "description": "Parse CSV for importing products",
   "license": "(ISC OR GPL-3.0)",
   "repository": "https://bitbucket.org/pyxlinc/pyxl",

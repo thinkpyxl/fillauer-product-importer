@@ -3,7 +3,6 @@ import { f } from './fields';
 
 function combineUnitSpecs(parent) {
   const combos = {};
-  console.log(parent);
   Object.keys(parent.specs).forEach(specLabel => {
     const lastBracket = specLabel.lastIndexOf(')');
     if (-1 !== lastBracket) {
@@ -12,7 +11,6 @@ function combineUnitSpecs(parent) {
       const unit = specLabel.substr(firstBracket, lastBracket);
       if (!combos[base]) combos[base] = {};
       combos[base][unit] = parent.specs[specLabel];
-      console.log(parent.specs[specLabel]);
       // combos[base][unit].val += unit;
     }
   });
@@ -277,15 +275,27 @@ function combineVariationSpecs(parent) {
 
 function fillBlankVariations(product) {
   const totalSpecs = product.variations.labels.length;
+  // An array of false, set to true once seen used 
+  //     in a variation after all the optimization. 
+  const specUsage = product.variations.labels.map(val => false);
+
+  // Figure out which specs are never usage (transformed into another spec)
+  product.variations.varies[0].forEach((variation, varyInd) => {
+    specUsage.forEach((used, ind) => {
+      if ('' !== variation.specs[ind]) {
+        specUsage[ind] = true;
+      }
+    });
+  });
 
   // Skipping varies pagination that never got used
   product.variations.varies[0].forEach((variation, varyInd) => {
     // For each spec inside each variation, assign empty string if non-existent.
-    for (let i = 0; i < totalSpecs; i++) {
-      if (!variation.specs[i]) {
-        product.variations.varies[0][varyInd].specs[i] = ' ';
-      };
-    };
+    specUsage.forEach((used, ind) => {
+      if (used && !variation.specs[ind]) {
+        product.variations.varies[0][varyInd].specs[ind] = ' ';
+      }
+    });
   });
 
   return product;
