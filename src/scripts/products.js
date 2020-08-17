@@ -283,7 +283,7 @@ function fillBlankVariations(product) {
     // For each spec inside each variation, assign empty string if non-existent.
     for (let i = 0; i < totalSpecs; i++) {
       if (!variation.specs[i]) {
-        product.variations.varies[0][varyInd].specs[i] = '';
+        product.variations.varies[0][varyInd].specs[i] = ' ';
       };
     };
   });

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.7.8
+ * Version: 1.7.9
  */
 
 
