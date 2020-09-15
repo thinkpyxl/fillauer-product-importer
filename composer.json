@@ -1,6 +1,6 @@
 {
     "name": "pyxl/fillauer-product-importer",
-    "description": "WordPress plugin not for creating popups",
+    "description": "WordPress plugin for importing spreadsheet products as WP posts",
     "type": "wordpress-plugin",
-    "version": "1.8"
+    "version": "1.8.1"
 }
