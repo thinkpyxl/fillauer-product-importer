@@ -2,11 +2,6 @@
 
 <h1>Upload File</h1>
 <p>Select a parent product sheet and it's corresponding variations sheet.</p>
-<div>
-  <b>Region Lock: </b> 
-  <h2 style="display: inline;"> <?php echo ICL_LANGUAGE_CODE; ?> </h2>
-  Only products in this region/language (check the WP top bar) will be imported.
-</div>
 <p><b>Status: </b> <span class='import_status'>Waiting for a parent and variations CSV file.</span></p>
 <form name='product_file_importer' enctype='multipart/form-data'>
       <div class='form-field'>

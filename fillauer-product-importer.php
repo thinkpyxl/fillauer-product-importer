@@ -23,7 +23,6 @@ function register_processor() {
 		[
 			'root'  => esc_url_raw( rest_url() ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
-			'lang' => ICL_LANGUAGE_CODE, 
 		]
 	);
 	wp_enqueue_script( 'product-import-processor' );
