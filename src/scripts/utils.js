@@ -60,6 +60,7 @@ function testCall(ev) {
     .catch(console.log);
 }
 
+// This is not used, was part of an old method I was trying to do with variations and now I'm too scared to delete it all
 function incrementProgress(elm) {
   return elm;
 }

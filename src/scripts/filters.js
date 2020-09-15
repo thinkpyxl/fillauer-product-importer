@@ -338,7 +338,7 @@ function buildSpec(start, end, ind, val, icon) {
     const spec = {};
 
     // Value
-    spec.val = val;
+    spec.val = val.trim();
 
     // Icon
     spec.icon = icon;
