@@ -83,6 +83,13 @@ function buildProductObjs(attrRow, rows) {
     product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
       .split('\n').map(line => line.trim()) : [];
 
+    /////////////////
+    // Trim whitespace from crucial columns
+    //   type only defined for parent products
+    if (product[f.type]) {
+      product[f.type] = product[f.type].trim();
+    }
+
     // Gallery
     product.gallery = product[f.image] ? product[f.image]
       .split(',').map(item => item.trim()) : ['1005'];
