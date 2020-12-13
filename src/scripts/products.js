@@ -52,7 +52,7 @@ function buildProductObjs(attrRow, rows) {
     product.packages = [];
 
     row.map((val, ind) => {
-      const specLabel = attrRow[ind];
+      const specLabel = attrRow[ind].trim();
       if ('' !== val) {
         // Specification or generic product information
         const spec = buildSpec(start, end, ind, val, icons[specLabel]);
