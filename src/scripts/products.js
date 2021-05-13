@@ -86,7 +86,7 @@ function buildProductObjs(attrRow, rows) {
     product.warranty.list = product[f.warrantyList] ? product[f.warrantyList]
       .split('\n').map(line => line.trim()) : [];
 
-    /////////////////
+    /// //////////////
     // Trim whitespace from crucial columns
     //   type only defined for parent products
     if (product[f.type]) {
@@ -137,11 +137,12 @@ function buildProductObjs(attrRow, rows) {
     product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
 
     // Visibility
-    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
+    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'private';
 
     // Region Specification
-    product[f.region] = product[f.region] ? product[f.region] : 'en';
-    // Skip products not in the current WP WPML Language
+    product[f.region] = product[f.region] ? product[f.region] : wpApiSettings.lang;
+
+    // Skip products region locked to another language, different than the current WP WPML Language
     if (product[f.type] && wpApiSettings.lang !== product[f.region]) {
       return false;
     }
@@ -289,8 +290,8 @@ function combineVariationSpecs(parent) {
 
 function fillBlankVariations(product) {
   const totalSpecs = product.variations.labels.length;
-  // An array of false, set to true once seen used 
-  //     in a variation after all the optimization. 
+  // An array of false, set to true once seen used
+  //     in a variation after all the optimization.
   const specUsage = product.variations.labels.map(val => false);
 
   // Figure out which specs are never usage (transformed into another spec)
