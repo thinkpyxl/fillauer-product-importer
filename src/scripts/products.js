@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { findSpecBounds, findSpecIcons, buildSpec } from './filters';
 import { f } from './fields';
 
@@ -40,6 +41,8 @@ function buildProductObjs(attrRow, rows) {
   //   of product objects keyed to the attribute name
   const [start, end] = findSpecBounds(attrRow);
   const icons = findSpecIcons(attrRow, rows[1]);
+  const region = wpApiSettings.lang;
+  console.log('Current Region: ', region);
 
   // Splice to avoid first two rows of attribute names and icons
   const products = rows.splice(1).map(row => {
@@ -134,10 +137,14 @@ function buildProductObjs(attrRow, rows) {
     product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
 
     // Visibility
-    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'private';
+    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
 
     // Region Specification
     product[f.region] = product[f.region] ? product[f.region] : 'en';
+    // Skip products not in the current WP WPML Language
+    if (product[f.type] && wpApiSettings.lang !== product[f.region]) {
+      return false;
+    }
 
     // Optimize specs by combining different units of the same spec
     product.specs = combineUnitSpecs(product);
