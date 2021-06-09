@@ -952,7 +952,7 @@ function optimizeProducts(parents) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /Users/jake/repos/fillauer-product-importer/src/scripts/products.js */"./src/scripts/products.js");
+module.exports = __webpack_require__(/*! /Users/jim/Local Sites/Fillauer/Importer/src/scripts/products.js */"./src/scripts/products.js");
 
 
 /***/ })
