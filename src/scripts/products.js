@@ -137,7 +137,7 @@ function buildProductObjs(attrRow, rows) {
     product[f.png] = product[f.pnf] ? '1' === product[f.pnf] : false;
 
     // Visibility
-    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'private';
+    product[f.visibility] = 'visible' === product[f.visibility] ? 'publish' : 'draft';
 
     // Region Specification
     product[f.region] = product[f.region] ? product[f.region] : wpApiSettings.lang;
