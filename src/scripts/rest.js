@@ -11,7 +11,15 @@ async function getExistingProducts() {
 
   // Fetch first page to find total pages
   pages.push(
-    ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=1`)
+    ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=1&status=draft,publish`,
+      {
+        method: 'get',
+        headers: {
+          'X-WP-Nonce': wpApiSettings.nonce,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
       .then(res => {
         pagesN = res.headers.get('x-wp-totalpages');
         console.log(`Total Pages: ${pagesN}`);
@@ -23,7 +31,14 @@ async function getExistingProducts() {
   // Fetch the rest of pages
   while (crntPage++ < pagesN) {
     pages.push(
-      ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=${crntPage}`)
+      ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=${crntPage}&status=draft,publish`,
+        {
+          method: 'get',
+          headers: {
+            'X-WP-Nonce': wpApiSettings.nonce,
+            'Content-Type': 'application/json',
+          },
+        })
         .then(res => res.json())
         .catch(err => console.error(err, pages)),
     );
