@@ -10,6 +10,8 @@ async function getExistingProducts() {
   pagesN = 20;
 
   // Fetch first page to find total pages
+  console.log(`Nonce: ${wpApiSettings.nonce}`);
+
   pages.push(
     ...await fetch(`${wpApiSettings.root}wp/v2/product?per_page=100&page=1&status=draft,publish`,
       {

@@ -23,14 +23,14 @@ function register_processor() {
 		[
 			'root'  => esc_url_raw( rest_url() ),
 			'nonce' => wp_create_nonce( 'wp_rest' ),
-			'lang' => ICL_LANGUAGE_CODE, 
+			'lang'  => ICL_LANGUAGE_CODE,
 		]
 	);
 	wp_enqueue_script( 'product-import-processor' );
-	wp_enqueue_style( 'product-import-styles');
+	wp_enqueue_style( 'product-import-styles' );
 }
 
-function update_variations( $value, $prod, $field_name ){
+function update_variations( $value, $prod, $field_name ) {
 
 	// New JSON
 	/*
@@ -60,113 +60,118 @@ function update_variations( $value, $prod, $field_name ){
 
 	// error_log('Variation global dump: '.print_r($value,true));
 	$spec_labels = $value['labels'];
-  $json = array();
+	$json        = [];
 	foreach ( $value['varies'] as $key => $varies ) {
 		// Create Variation
-		
-		if( !array_key_exists('sku', $varies) ){
-			error_log('sku not found');
+
+		if ( ! array_key_exists( 'sku', $varies ) ) {
+			error_log( 'sku not found' );
 			continue;
 		}
-		$group = array(
-			'sku'  => $varies['sku'],
-			'name' => $varies['name'],
-			'image' => array_key_exists('image', $varies) ? $varies['image'] : false,
-			'indention' => array_key_exists('indent', $varies) ? $varies['indent'] : '',
-			'specs' => [],
-		);
+		$group = [
+			'sku'       => $varies['sku'],
+			'name'      => $varies['name'],
+			'image'     => array_key_exists( 'image', $varies ) ? $varies['image'] : false,
+			'indention' => array_key_exists( 'indent', $varies ) ? $varies['indent'] : '',
+			'specs'     => [],
+		];
 
 		// Add Specifications for each variation entry
-		if(array_key_exists('specs', $varies)){
+		if ( array_key_exists( 'specs', $varies ) ) {
 
 			foreach ( $varies['specs'] as $index => $val ) {
 				// return true;
-				if($val === '') continue;
+				if ( $val === '' ) {
+					continue;
+				}
 				$spec = [
-					'spec_label' => $spec_labels[$index],
-					'spec_value' => $val
+					'spec_label' => $spec_labels[ $index ],
+					'spec_value' => $val,
 				];
-				array_push($group['specs'], $spec);
+				array_push( $group['specs'], $spec );
 			}
-		}
-		else{
-			error_log('Variation update fail: '.print_r($varies, true));
+		} else {
+			error_log( 'Variation update fail: ' . print_r( $varies, true ) );
 		}
 		array_push( $json, $group );
 	}
-	update_field( 'variation_json', json_encode($json), $prod->ID );
+	update_field( 'variation_json', json_encode( $json ), $prod->ID );
 	return true;
 };
 
 function update_gallery( $value, $prod, $field_name ) {
 	$featured = true;
-	foreach( $value as $item ){ 
+	foreach ( $value as $item ) {
 		if ( $featured && ! strpos( $item, 'http' ) ) {
 			set_post_thumbnail( $prod->ID, $item );
 		}
-		add_row('gallery_list', ['asset_id' => $item], $prod->ID );
+		add_row( 'gallery_list', [ 'asset_id' => $item ], $prod->ID );
 
 		$featured = false;
 	}
 }
 
 function update_warranty( $value, $prod, $field_name ) {
-	if(array_key_exists('body', $value)){
-		update_field('warranty_body', $value['body'], $prod->ID);
+	if ( array_key_exists( 'body', $value ) ) {
+		update_field( 'warranty_body', $value['body'], $prod->ID );
 	}
-	if(array_key_exists('list', $value)){
-		foreach( $value['list'] as $item ){ 
-			add_row('warranty_list', ['warranty_item' => $item], $prod->ID );
+	if ( array_key_exists( 'list', $value ) ) {
+		foreach ( $value['list'] as $item ) {
+			add_row( 'warranty_list', [ 'warranty_item' => $item ], $prod->ID );
 		}
 	}
 }
 
 function update_features( $value, $prod, $field_name ) {
-	foreach( $value as $item ){ 
-		add_row('product_feats', ['product_feat' => $item], $prod->ID );
+	foreach ( $value as $item ) {
+		add_row( 'product_feats', [ 'product_feat' => $item ], $prod->ID );
 	}
 }
 
 function update_related_products( $value, $prod, $field_name ) {
-	foreach( $value as $item ){ 
-		add_row('related_products', ['related_product' => $item], $prod->ID );
+	foreach ( $value as $item ) {
+		add_row( 'related_products', [ 'related_product' => $item ], $prod->ID );
 	}
 }
 
 function update_indications( $value, $prod, $field_name ) {
-	foreach( $value as $item ){ 
-		add_row('indication_list', ['indication_item' => $item], $prod->ID );
+	foreach ( $value as $item ) {
+		add_row( 'indication_list', [ 'indication_item' => $item ], $prod->ID );
 	}
 }
 
 function update_downloads( $value, $prod, $field_name ) {
-	foreach( $value as $item ){ 
-		if( array_key_exists('title', $item) && array_key_exists('url', $item)){
-			add_row('download_list', [
-				'download' => [
-					'title' => $item['title'], 
-					'url' => $item['url']
-				]
-			], $prod->ID );
+	foreach ( $value as $item ) {
+		if ( array_key_exists( 'title', $item ) && array_key_exists( 'url', $item ) ) {
+			add_row(
+				'download_list',
+				[
+					'download' => [
+						'title' => $item['title'],
+						'url'   => $item['url'],
+					],
+				],
+				$prod->ID
+			);
 		}
 	}
 }
 
 function update_region( $value, $prod, $field_name ) {
-	$valid_languages = apply_filters( 'wpml_active_languages', NULL, 'orderby=id&order=desc' ) ?: [];
-	$lang_codes = array_keys( $valid_languages );
+	$valid_languages = apply_filters( 'wpml_active_languages', null, 'orderby=id&order=desc' ) ?: [];
+	$lang_codes      = array_keys( $valid_languages );
 
-	if( false == in_array($value, $lang_codes) ){
-		error_log('======   IMPORTER   ======');
-		error_log('Invalid language attempted: '.print_r($value, true));
-		error_log('');
+	if ( false == in_array( $value, $lang_codes ) ) {
+		error_log( '======   IMPORTER   ======' );
+		error_log( 'Invalid language attempted: ' . print_r( $value, true ) );
+		error_log( '' );
 		return false;
 	}
 
 	$wpml_element_type = apply_filters( 'wpml_element_type', 'product' );
-	$args = [
-		'element_id' => $prod->ID,
-		'element_type' => $wpml_element_type,
+	$args              = [
+		'element_id'    => $prod->ID,
+		'element_type'  => $wpml_element_type,
 		'language_code' => $value,
 	];
 	do_action( 'wpml_set_element_language_details', $args );
@@ -179,12 +184,12 @@ function update_specs( $value, $prod, $field_name ) {
 
 		// error_log( 'specs key' . print_r( $key, true ) );
 		// error_log( 'specs val' . print_r( $val, true ) );
-		
+
 		$group[] = [
 			'spec_label' => $key,
 			'spec_value' => $val['val'],
-			'logo'       => array_key_exists('icon', $val) ? $val['icon'] : 'cog',
-			'featured'   => array_key_exists('featured', $val) ? $val['featured'] : false,
+			'logo'       => array_key_exists( 'icon', $val ) ? $val['icon'] : 'cog',
+			'featured'   => array_key_exists( 'featured', $val ) ? $val['featured'] : false,
 		];
 		update_field( 'specifications', $group, $prod->ID );
 	}
@@ -198,34 +203,34 @@ function update_packages( $value, $prod, $field_name ) {
 		// error_log( 'package key ' . print_r( $key, true ) );
 		// error_log( 'package value ' . print_r( $value, true ) );
 		// Read product_info to find which fields to toggle
-		$descOn = false;
-		$featsOn = false;
-		$imageOn = false;
+		$descOn      = false;
+		$featsOn     = false;
+		$imageOn     = false;
 		$table_image = false;
-		if( key_exists( 'image', $value )){
+		if ( key_exists( 'image', $value ) ) {
 			$table_image = $value['image'];
 		}
 		foreach ( $value['product_info'] as $val ) {
-			switch($val){
-				case 'name': 
+			switch ( $val ) {
+				case 'name':
 					$descOn = true;
-				break;
-				case 'description': 
+					break;
+				case 'description':
 					$descOn = true;
-				break;
-				case 'features': 
+					break;
+				case 'features':
 					$featsOn = true;
-				break;
-				case 'image': 
+					break;
+				case 'image':
 					$imageOn = true;
-				break;
-			}	
+					break;
+			}
 		}
 		// Create Package
 		$group[] = [
 			'title'                    => $value['label'],
-			'package_pic'              => $value['pic'], 
-			'model'                    => $value['model'], 
+			'package_pic'              => $value['pic'],
+			'model'                    => $value['model'],
 			'product_info_name'        => $descOn,
 			'product_info_description' => $descOn,
 			'product_info_features'    => $featsOn,
@@ -263,11 +268,11 @@ function update_taxonomies( $value, $prod, $field_name ) {
 
 			// Checks that hierarchal terms exist before associating with product.
 			if ( 'product_cat' === $key ) {
-				foreach ($val as $cat){
+				foreach ( $val as $cat ) {
 					$terms = explode( '>', $cat );
 					if ( ! empty( $terms ) ) {
 						$parent_term = '';
-						$insert = [];
+						$insert      = [];
 						foreach ( $terms as $term ) {
 							$term = trim( $term );
 							if ( ! term_exists( $term, 'product_cat' ) ) {
@@ -275,7 +280,7 @@ function update_taxonomies( $value, $prod, $field_name ) {
 								// If parent is not empty creates this term as a child of the parent.
 								if ( ! empty( $parent_term ) ) {
 									$parent_term = get_term_by( 'name', $parent_term, 'product_cat' );
-									$args = [
+									$args        = [
 										'parent' => $parent_term->term_id,
 									];
 								}
@@ -289,7 +294,7 @@ function update_taxonomies( $value, $prod, $field_name ) {
 							$parent_term = $term;
 						}
 						// Attaches all terms at once.
-						wp_set_object_terms( $prod->ID, $insert, $key, true);
+						wp_set_object_terms( $prod->ID, $insert, $key, true );
 					}
 				}
 			} else {
@@ -320,17 +325,17 @@ add_action(
 				'update_callback' => function( $value, $listing_obj, $field_name ) {
 
 					// Delete existing fields, if the product is being re-imported
-					//! THIS DOES NOT ACCOUNT FOR: 
-					//     Taxonomies, 
-					// Title, Desc (Content) and Short Desc (Excerpt) will 
+					//! THIS DOES NOT ACCOUNT FOR:
+					//     Taxonomies,
+					// Title, Desc (Content) and Short Desc (Excerpt) will
 					//   always post/overwrite with empty strings if absent
 
-					//  we only need the ACF field names 
-					$ACF_fields = get_fields($listing_obj->ID) ?: [];
-					$ACF_keys = array_keys($ACF_fields);
+					//  we only need the ACF field names
+					$ACF_fields = get_fields( $listing_obj->ID ) ?: [];
+					$ACF_keys   = array_keys( $ACF_fields );
 
-					foreach($ACF_keys as $ACF_key){
-						delete_field($ACF_key, $listing_obj->ID);
+					foreach ( $ACF_keys as $ACF_key ) {
+						delete_field( $ACF_key, $listing_obj->ID );
 					}
 
 					// Assign meta data
