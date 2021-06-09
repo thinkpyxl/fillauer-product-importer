@@ -22,7 +22,7 @@
   "dependencies": {
     "aos": "^2.3.4",
     "autoprefixer": "^9.6.1",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "core-js": "^3.2.1",
     "csv-parse": "^4.6.5",
     "globule": "^1.2.1",
