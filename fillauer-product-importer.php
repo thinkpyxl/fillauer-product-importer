@@ -71,7 +71,7 @@ function update_variations( $value, $prod, $field_name ) {
 		}
 		$group = [
 			'sku'       => $varies['sku'],
-			'name'      => $varies['name'],
+			'name'      => htmlspecialchars( $varies['name'] ),
 			'image'     => array_key_exists( 'image', $varies ) ? $varies['image'] : false,
 			'indention' => array_key_exists( 'indent', $varies ) ? $varies['indent'] : '',
 			'specs'     => [],
