@@ -123,6 +123,12 @@ function update_warranty( $value, $prod, $field_name ) {
 	}
 }
 
+function update_l_codes( $value, $prod, $field_name ) {
+	if ( array_key_exists( 'suggested_l_codes', $value ) ) {
+		update_field( 'suggested_l_codes', $value['suggested_l_codes'], $prod->ID );
+	}
+}
+
 function update_features( $value, $prod, $field_name ) {
 	foreach ( $value as $item ) {
 		add_row( 'product_feats', [ 'product_feat' => $item ], $prod->ID );
@@ -393,6 +399,14 @@ add_action(
 			'related',
 			[
 				'update_callback' => 'update_related_products',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'suggested_l_codes',
+			[
+				'update_callback' => 'update_l_codes',
 				'schema'          => null,
 			]
 		);

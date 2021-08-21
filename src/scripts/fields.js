@@ -24,6 +24,7 @@ const f = {
   orderInfo: 'Ordering Information',
   feats: 'Product Features',
   related: 'Related Products',
+  suggested_l_codes: 'Suggested L-Codes',
   indict: 'Indications',
   downs: 'Downloads',
   main_model: 'Main Model',
