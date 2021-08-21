@@ -39,6 +39,7 @@ function combineUnitSpecs(parent) {
 function buildProductObjs(attrRow, rows) {
   // This will go through a CSV and create an array
   //   of product objects keyed to the attribute name
+
   const [start, end] = findSpecBounds(attrRow);
   const icons = findSpecIcons(attrRow, rows[1]);
   const region = wpApiSettings.lang;
@@ -129,6 +130,9 @@ function buildProductObjs(attrRow, rows) {
 
     // Order field
     product[f.orderInfo] = product[f.orderInfo] ? product[f.orderInfo] : '';
+    
+    // L-Codes field
+    product[f.suggested_l_codes] = product[f.suggested_l_codes] ? product[f.suggested_l_codes] : '';
 
     // Main Model field
     product[f.main_model] = product[f.main_model] ? product[f.main_model] : 'E';

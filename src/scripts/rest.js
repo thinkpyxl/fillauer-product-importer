@@ -104,11 +104,13 @@ async function POSTproduct(val, updateID = false) {
     packages: Object.values(val.packages ? val.packages : {}), // Keys only used for construction
     warranty: val.warranty,
     features: val.features,
+    suggested_l_codes: val[f.suggested_l_codes],
     indications: val.indications,
     downloads: val.downloads,
     related: val.related,
     region: val[f.region],
   };
+
 
   // console.log('product payload', payload);
   let url = `${wpApiSettings.root}wp/v2/product`;

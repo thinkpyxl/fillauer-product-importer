@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fillauer Product Importer
  * Description: Import a CSV file to update products on the database
- * Version: 1.8.6
+ * Version: 1.8.7
  */
 
 
@@ -124,8 +124,9 @@ function update_warranty( $value, $prod, $field_name ) {
 }
 
 function update_l_codes( $value, $prod, $field_name ) {
-	if ( array_key_exists( 'suggested_l_codes', $value ) ) {
-		update_field( 'suggested_l_codes', $value['suggested_l_codes'], $prod->ID );
+	_log( $value, $prod, $field_name );
+	if ( ! empty( $value ) ) {
+		update_field( 'suggested_l_codes', nl2br( $value ), $prod->ID );
 	}
 }
 
