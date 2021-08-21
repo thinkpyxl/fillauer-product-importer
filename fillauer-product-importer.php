@@ -14,7 +14,7 @@ function importer_menu() {
 
 function register_processor() {
 	wp_register_script( 'product-import-processor', plugins_url( 'dist/scripts/client.js', __FILE__ ), '1.0.0', true );
-	wp_register_style( 'product-import-styles', plugins_url( 'dist/styles/global.css', __FILE__ ), '1.0.0', true );
+	wp_register_style( 'product-import-styles', plugins_url( 'dist/styles/global.min.css', __FILE__ ), '1.0.0', true );
 	wp_register_style( 'product-import-styles-min', plugins_url( 'dist/styles/global.min.css', __FILE__ ), '1.0.0', true );
 
 	// Pass nounce for WP API Authentication
