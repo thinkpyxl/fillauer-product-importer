@@ -165,6 +165,12 @@ function update_downloads( $value, $prod, $field_name ) {
 	}
 }
 
+function update_documentation( $value, $prod, $field_name ) {
+	if ( ! empty( $value ) ) {
+		update_field( 'documentation_shortcode', $value, $prod->ID );
+	}
+}
+
 function update_region( $value, $prod, $field_name ) {
 	$valid_languages = apply_filters( 'wpml_active_languages', null, 'orderby=id&order=desc' ) ?: [];
 	$lang_codes      = array_keys( $valid_languages );
@@ -429,9 +435,17 @@ add_action(
 		);
 		register_rest_field(
 			'product',
-			'downloads',
+			'documentation',
 			[
-				'update_callback' => 'update_downloads',
+				'update_callback' => 'update_documentation',
+				'schema'          => null,
+			]
+		);
+		register_rest_field(
+			'product',
+			'shortcode',
+			[
+				'update_callback' => 'documentation_shortcode',
 				'schema'          => null,
 			]
 		);

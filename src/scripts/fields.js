@@ -27,6 +27,7 @@ const f = {
   suggested_l_codes: 'Suggested L-Codes',
   indict: 'Indications',
   downs: 'Downloads',
+  documentation: 'Documentation',
   main_model: 'Main Model',
   pnf: 'In Part Number Finder',
   searchWeight: 'Search Weight',

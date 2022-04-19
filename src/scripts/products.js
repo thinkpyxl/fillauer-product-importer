@@ -134,6 +134,9 @@ function buildProductObjs(attrRow, rows) {
     // L-Codes field
     product[f.suggested_l_codes] = product[f.suggested_l_codes] ? product[f.suggested_l_codes] : '';
 
+    // L-Codes field
+    product[f.documentation] = product[f.documentation] ? product[f.documentation] : '';
+
     // Main Model field
     product[f.main_model] = product[f.main_model] ? product[f.main_model] : 'E';
 
