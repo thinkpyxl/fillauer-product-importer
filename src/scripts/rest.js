@@ -97,6 +97,7 @@ async function POSTproduct(val, updateID = false) {
       main_model: val[f.main_model],
       part_number_finder: val[f.pnf],
       search_weight: val[f.searchWeight],
+	  documentation_shortcode: val[f.shortCode],
     },
     specs: val.specs,
     gallery: val.gallery,

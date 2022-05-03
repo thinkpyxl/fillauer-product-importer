@@ -30,6 +30,7 @@ const f = {
   main_model: 'Main Model',
   pnf: 'In Part Number Finder',
   searchWeight: 'Search Weight',
+  shortCode: 'Documentation Shortcode',
   region: 'Region Lock',
 };
 
